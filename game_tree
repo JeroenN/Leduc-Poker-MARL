@@ -1,0 +1,1072 @@
+// CFR Game Tree
+digraph {
+	0 [label=chance]
+	1 [label="player: 0
+hand=J, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	0 -> 1
+	2 [label="player: 1
+hand=J, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	1 -> 2 [label=call]
+	3 [label=chance]
+	2 -> 3 [label=call]
+	4 [label="player: 0
+hand=J, public=Q, 
+my_chips=1, opp_chips=1, raise=0"]
+	3 -> 4
+	5 [label="player: 0
+hand=J, public=K, 
+my_chips=1, opp_chips=1, raise=0"]
+	3 -> 5
+	6 [label="player: 0
+hand=J, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	2 -> 6 [label=raise]
+	7 [label=chance]
+	6 -> 7 [label=call]
+	8 [label="player: 1
+hand=J, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	6 -> 8 [label=raise]
+	9 [label=terminal]
+	6 -> 9 [label=fold]
+	10 [label="player: 1
+hand=J, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	1 -> 10 [label=raise]
+	11 [label=chance]
+	10 -> 11 [label=call]
+	12 [label="player: 0
+hand=J, public=Q, 
+my_chips=3, opp_chips=3, raise=0"]
+	11 -> 12
+	13 [label="player: 0
+hand=J, public=K, 
+my_chips=3, opp_chips=3, raise=0"]
+	11 -> 13
+	14 [label="player: 0
+hand=J, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	10 -> 14 [label=raise]
+	15 [label=chance]
+	14 -> 15 [label=call]
+	16 [label=terminal]
+	14 -> 16 [label=fold]
+	17 [label=terminal]
+	10 -> 17 [label=fold]
+	18 [label="player: 1
+hand=J, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	0 -> 18
+	19 [label="player: 0
+hand=J, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	18 -> 19 [label=call]
+	20 [label=chance]
+	19 -> 20 [label=call]
+	21 [label="player: 1
+hand=J, public=Q, 
+my_chips=1, opp_chips=1, raise=0"]
+	20 -> 21
+	22 [label="player: 1
+hand=J, public=K, 
+my_chips=1, opp_chips=1, raise=0"]
+	20 -> 22
+	23 [label="player: 1
+hand=J, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	19 -> 23 [label=raise]
+	24 [label=chance]
+	23 -> 24 [label=call]
+	25 [label="player: 0
+hand=J, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	23 -> 25 [label=raise]
+	26 [label=terminal]
+	23 -> 26 [label=fold]
+	27 [label="player: 0
+hand=J, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	18 -> 27 [label=raise]
+	28 [label=chance]
+	27 -> 28 [label=call]
+	29 [label="player: 1
+hand=J, public=Q, 
+my_chips=3, opp_chips=3, raise=0"]
+	28 -> 29
+	30 [label="player: 1
+hand=J, public=K, 
+my_chips=3, opp_chips=3, raise=0"]
+	28 -> 30
+	31 [label="player: 1
+hand=J, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	27 -> 31 [label=raise]
+	32 [label=chance]
+	31 -> 32 [label=call]
+	33 [label=terminal]
+	31 -> 33 [label=fold]
+	34 [label=terminal]
+	27 -> 34 [label=fold]
+	35 [label="player: 0
+hand=J, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	0 -> 35
+	36 [label="player: 1
+hand=Q, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	35 -> 36 [label=call]
+	37 [label=chance]
+	36 -> 37 [label=call]
+	38 [label="player: 0
+hand=J, public=J, 
+my_chips=1, opp_chips=1, raise=0"]
+	37 -> 38
+	39 [label="player: 0
+hand=J, public=Q, 
+my_chips=1, opp_chips=1, raise=0"]
+	37 -> 39
+	40 [label="player: 0
+hand=J, public=K, 
+my_chips=1, opp_chips=1, raise=0"]
+	37 -> 40
+	41 [label="player: 0
+hand=J, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	36 -> 41 [label=raise]
+	42 [label=chance]
+	41 -> 42 [label=call]
+	43 [label="player: 1
+hand=Q, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	41 -> 43 [label=raise]
+	44 [label=terminal]
+	41 -> 44 [label=fold]
+	45 [label="player: 1
+hand=Q, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	35 -> 45 [label=raise]
+	46 [label=chance]
+	45 -> 46 [label=call]
+	47 [label="player: 0
+hand=J, public=J, 
+my_chips=3, opp_chips=3, raise=0"]
+	46 -> 47
+	48 [label="player: 0
+hand=J, public=Q, 
+my_chips=3, opp_chips=3, raise=0"]
+	46 -> 48
+	49 [label="player: 0
+hand=J, public=K, 
+my_chips=3, opp_chips=3, raise=0"]
+	46 -> 49
+	50 [label="player: 0
+hand=J, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	45 -> 50 [label=raise]
+	51 [label=chance]
+	50 -> 51 [label=call]
+	52 [label=terminal]
+	50 -> 52 [label=fold]
+	53 [label=terminal]
+	45 -> 53 [label=fold]
+	54 [label="player: 1
+hand=Q, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	0 -> 54
+	55 [label="player: 0
+hand=J, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	54 -> 55 [label=call]
+	56 [label=chance]
+	55 -> 56 [label=call]
+	57 [label="player: 1
+hand=Q, public=J, 
+my_chips=1, opp_chips=1, raise=0"]
+	56 -> 57
+	58 [label="player: 1
+hand=Q, public=Q, 
+my_chips=1, opp_chips=1, raise=0"]
+	56 -> 58
+	59 [label="player: 1
+hand=Q, public=K, 
+my_chips=1, opp_chips=1, raise=0"]
+	56 -> 59
+	60 [label="player: 1
+hand=Q, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	55 -> 60 [label=raise]
+	61 [label=chance]
+	60 -> 61 [label=call]
+	62 [label="player: 0
+hand=J, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	60 -> 62 [label=raise]
+	63 [label=terminal]
+	60 -> 63 [label=fold]
+	64 [label="player: 0
+hand=J, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	54 -> 64 [label=raise]
+	65 [label=chance]
+	64 -> 65 [label=call]
+	66 [label="player: 1
+hand=Q, public=J, 
+my_chips=3, opp_chips=3, raise=0"]
+	65 -> 66
+	67 [label="player: 1
+hand=Q, public=Q, 
+my_chips=3, opp_chips=3, raise=0"]
+	65 -> 67
+	68 [label="player: 1
+hand=Q, public=K, 
+my_chips=3, opp_chips=3, raise=0"]
+	65 -> 68
+	69 [label="player: 1
+hand=Q, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	64 -> 69 [label=raise]
+	70 [label=chance]
+	69 -> 70 [label=call]
+	71 [label=terminal]
+	69 -> 71 [label=fold]
+	72 [label=terminal]
+	64 -> 72 [label=fold]
+	73 [label="player: 0
+hand=J, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	0 -> 73
+	74 [label="player: 1
+hand=K, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	73 -> 74 [label=call]
+	75 [label=chance]
+	74 -> 75 [label=call]
+	76 [label="player: 0
+hand=J, public=J, 
+my_chips=1, opp_chips=1, raise=0"]
+	75 -> 76
+	77 [label="player: 0
+hand=J, public=Q, 
+my_chips=1, opp_chips=1, raise=0"]
+	75 -> 77
+	78 [label="player: 0
+hand=J, public=K, 
+my_chips=1, opp_chips=1, raise=0"]
+	75 -> 78
+	79 [label="player: 0
+hand=J, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	74 -> 79 [label=raise]
+	80 [label=chance]
+	79 -> 80 [label=call]
+	81 [label="player: 1
+hand=K, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	79 -> 81 [label=raise]
+	82 [label=terminal]
+	79 -> 82 [label=fold]
+	83 [label="player: 1
+hand=K, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	73 -> 83 [label=raise]
+	84 [label=chance]
+	83 -> 84 [label=call]
+	85 [label="player: 0
+hand=J, public=J, 
+my_chips=3, opp_chips=3, raise=0"]
+	84 -> 85
+	86 [label="player: 0
+hand=J, public=Q, 
+my_chips=3, opp_chips=3, raise=0"]
+	84 -> 86
+	87 [label="player: 0
+hand=J, public=K, 
+my_chips=3, opp_chips=3, raise=0"]
+	84 -> 87
+	88 [label="player: 0
+hand=J, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	83 -> 88 [label=raise]
+	89 [label=chance]
+	88 -> 89 [label=call]
+	90 [label=terminal]
+	88 -> 90 [label=fold]
+	91 [label=terminal]
+	83 -> 91 [label=fold]
+	92 [label="player: 1
+hand=K, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	0 -> 92
+	93 [label="player: 0
+hand=J, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	92 -> 93 [label=call]
+	94 [label=chance]
+	93 -> 94 [label=call]
+	95 [label="player: 1
+hand=K, public=J, 
+my_chips=1, opp_chips=1, raise=0"]
+	94 -> 95
+	96 [label="player: 1
+hand=K, public=Q, 
+my_chips=1, opp_chips=1, raise=0"]
+	94 -> 96
+	97 [label="player: 1
+hand=K, public=K, 
+my_chips=1, opp_chips=1, raise=0"]
+	94 -> 97
+	98 [label="player: 1
+hand=K, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	93 -> 98 [label=raise]
+	99 [label=chance]
+	98 -> 99 [label=call]
+	100 [label="player: 0
+hand=J, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	98 -> 100 [label=raise]
+	101 [label=terminal]
+	98 -> 101 [label=fold]
+	102 [label="player: 0
+hand=J, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	92 -> 102 [label=raise]
+	103 [label=chance]
+	102 -> 103 [label=call]
+	104 [label="player: 1
+hand=K, public=J, 
+my_chips=3, opp_chips=3, raise=0"]
+	103 -> 104
+	105 [label="player: 1
+hand=K, public=Q, 
+my_chips=3, opp_chips=3, raise=0"]
+	103 -> 105
+	106 [label="player: 1
+hand=K, public=K, 
+my_chips=3, opp_chips=3, raise=0"]
+	103 -> 106
+	107 [label="player: 1
+hand=K, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	102 -> 107 [label=raise]
+	108 [label=chance]
+	107 -> 108 [label=call]
+	109 [label=terminal]
+	107 -> 109 [label=fold]
+	110 [label=terminal]
+	102 -> 110 [label=fold]
+	111 [label="player: 0
+hand=Q, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	0 -> 111
+	112 [label="player: 1
+hand=J, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	111 -> 112 [label=call]
+	113 [label=chance]
+	112 -> 113 [label=call]
+	114 [label="player: 0
+hand=Q, public=J, 
+my_chips=1, opp_chips=1, raise=0"]
+	113 -> 114
+	115 [label="player: 0
+hand=Q, public=Q, 
+my_chips=1, opp_chips=1, raise=0"]
+	113 -> 115
+	116 [label="player: 0
+hand=Q, public=K, 
+my_chips=1, opp_chips=1, raise=0"]
+	113 -> 116
+	117 [label="player: 0
+hand=Q, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	112 -> 117 [label=raise]
+	118 [label=chance]
+	117 -> 118 [label=call]
+	119 [label="player: 1
+hand=J, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	117 -> 119 [label=raise]
+	120 [label=terminal]
+	117 -> 120 [label=fold]
+	121 [label="player: 1
+hand=J, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	111 -> 121 [label=raise]
+	122 [label=chance]
+	121 -> 122 [label=call]
+	123 [label="player: 0
+hand=Q, public=J, 
+my_chips=3, opp_chips=3, raise=0"]
+	122 -> 123
+	124 [label="player: 0
+hand=Q, public=Q, 
+my_chips=3, opp_chips=3, raise=0"]
+	122 -> 124
+	125 [label="player: 0
+hand=Q, public=K, 
+my_chips=3, opp_chips=3, raise=0"]
+	122 -> 125
+	126 [label="player: 0
+hand=Q, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	121 -> 126 [label=raise]
+	127 [label=chance]
+	126 -> 127 [label=call]
+	128 [label=terminal]
+	126 -> 128 [label=fold]
+	129 [label=terminal]
+	121 -> 129 [label=fold]
+	130 [label="player: 1
+hand=J, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	0 -> 130
+	131 [label="player: 0
+hand=Q, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	130 -> 131 [label=call]
+	132 [label=chance]
+	131 -> 132 [label=call]
+	133 [label="player: 1
+hand=J, public=J, 
+my_chips=1, opp_chips=1, raise=0"]
+	132 -> 133
+	134 [label="player: 1
+hand=J, public=Q, 
+my_chips=1, opp_chips=1, raise=0"]
+	132 -> 134
+	135 [label="player: 1
+hand=J, public=K, 
+my_chips=1, opp_chips=1, raise=0"]
+	132 -> 135
+	136 [label="player: 1
+hand=J, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	131 -> 136 [label=raise]
+	137 [label=chance]
+	136 -> 137 [label=call]
+	138 [label="player: 0
+hand=Q, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	136 -> 138 [label=raise]
+	139 [label=terminal]
+	136 -> 139 [label=fold]
+	140 [label="player: 0
+hand=Q, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	130 -> 140 [label=raise]
+	141 [label=chance]
+	140 -> 141 [label=call]
+	142 [label="player: 1
+hand=J, public=J, 
+my_chips=3, opp_chips=3, raise=0"]
+	141 -> 142
+	143 [label="player: 1
+hand=J, public=Q, 
+my_chips=3, opp_chips=3, raise=0"]
+	141 -> 143
+	144 [label="player: 1
+hand=J, public=K, 
+my_chips=3, opp_chips=3, raise=0"]
+	141 -> 144
+	145 [label="player: 1
+hand=J, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	140 -> 145 [label=raise]
+	146 [label=chance]
+	145 -> 146 [label=call]
+	147 [label=terminal]
+	145 -> 147 [label=fold]
+	148 [label=terminal]
+	140 -> 148 [label=fold]
+	149 [label="player: 0
+hand=Q, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	0 -> 149
+	150 [label="player: 1
+hand=Q, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	149 -> 150 [label=call]
+	151 [label=chance]
+	150 -> 151 [label=call]
+	152 [label="player: 0
+hand=Q, public=J, 
+my_chips=1, opp_chips=1, raise=0"]
+	151 -> 152
+	153 [label="player: 0
+hand=Q, public=K, 
+my_chips=1, opp_chips=1, raise=0"]
+	151 -> 153
+	154 [label="player: 0
+hand=Q, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	150 -> 154 [label=raise]
+	155 [label=chance]
+	154 -> 155 [label=call]
+	156 [label="player: 1
+hand=Q, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	154 -> 156 [label=raise]
+	157 [label=terminal]
+	154 -> 157 [label=fold]
+	158 [label="player: 1
+hand=Q, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	149 -> 158 [label=raise]
+	159 [label=chance]
+	158 -> 159 [label=call]
+	160 [label="player: 0
+hand=Q, public=J, 
+my_chips=3, opp_chips=3, raise=0"]
+	159 -> 160
+	161 [label="player: 0
+hand=Q, public=K, 
+my_chips=3, opp_chips=3, raise=0"]
+	159 -> 161
+	162 [label="player: 0
+hand=Q, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	158 -> 162 [label=raise]
+	163 [label=chance]
+	162 -> 163 [label=call]
+	164 [label=terminal]
+	162 -> 164 [label=fold]
+	165 [label=terminal]
+	158 -> 165 [label=fold]
+	166 [label="player: 1
+hand=Q, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	0 -> 166
+	167 [label="player: 0
+hand=Q, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	166 -> 167 [label=call]
+	168 [label=chance]
+	167 -> 168 [label=call]
+	169 [label="player: 1
+hand=Q, public=J, 
+my_chips=1, opp_chips=1, raise=0"]
+	168 -> 169
+	170 [label="player: 1
+hand=Q, public=K, 
+my_chips=1, opp_chips=1, raise=0"]
+	168 -> 170
+	171 [label="player: 1
+hand=Q, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	167 -> 171 [label=raise]
+	172 [label=chance]
+	171 -> 172 [label=call]
+	173 [label="player: 0
+hand=Q, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	171 -> 173 [label=raise]
+	174 [label=terminal]
+	171 -> 174 [label=fold]
+	175 [label="player: 0
+hand=Q, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	166 -> 175 [label=raise]
+	176 [label=chance]
+	175 -> 176 [label=call]
+	177 [label="player: 1
+hand=Q, public=J, 
+my_chips=3, opp_chips=3, raise=0"]
+	176 -> 177
+	178 [label="player: 1
+hand=Q, public=K, 
+my_chips=3, opp_chips=3, raise=0"]
+	176 -> 178
+	179 [label="player: 1
+hand=Q, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	175 -> 179 [label=raise]
+	180 [label=chance]
+	179 -> 180 [label=call]
+	181 [label=terminal]
+	179 -> 181 [label=fold]
+	182 [label=terminal]
+	175 -> 182 [label=fold]
+	183 [label="player: 0
+hand=Q, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	0 -> 183
+	184 [label="player: 1
+hand=K, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	183 -> 184 [label=call]
+	185 [label=chance]
+	184 -> 185 [label=call]
+	186 [label="player: 0
+hand=Q, public=J, 
+my_chips=1, opp_chips=1, raise=0"]
+	185 -> 186
+	187 [label="player: 0
+hand=Q, public=Q, 
+my_chips=1, opp_chips=1, raise=0"]
+	185 -> 187
+	188 [label="player: 0
+hand=Q, public=K, 
+my_chips=1, opp_chips=1, raise=0"]
+	185 -> 188
+	189 [label="player: 0
+hand=Q, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	184 -> 189 [label=raise]
+	190 [label=chance]
+	189 -> 190 [label=call]
+	191 [label="player: 1
+hand=K, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	189 -> 191 [label=raise]
+	192 [label=terminal]
+	189 -> 192 [label=fold]
+	193 [label="player: 1
+hand=K, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	183 -> 193 [label=raise]
+	194 [label=chance]
+	193 -> 194 [label=call]
+	195 [label="player: 0
+hand=Q, public=J, 
+my_chips=3, opp_chips=3, raise=0"]
+	194 -> 195
+	196 [label="player: 0
+hand=Q, public=Q, 
+my_chips=3, opp_chips=3, raise=0"]
+	194 -> 196
+	197 [label="player: 0
+hand=Q, public=K, 
+my_chips=3, opp_chips=3, raise=0"]
+	194 -> 197
+	198 [label="player: 0
+hand=Q, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	193 -> 198 [label=raise]
+	199 [label=chance]
+	198 -> 199 [label=call]
+	200 [label=terminal]
+	198 -> 200 [label=fold]
+	201 [label=terminal]
+	193 -> 201 [label=fold]
+	202 [label="player: 1
+hand=K, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	0 -> 202
+	203 [label="player: 0
+hand=Q, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	202 -> 203 [label=call]
+	204 [label=chance]
+	203 -> 204 [label=call]
+	205 [label="player: 1
+hand=K, public=J, 
+my_chips=1, opp_chips=1, raise=0"]
+	204 -> 205
+	206 [label="player: 1
+hand=K, public=Q, 
+my_chips=1, opp_chips=1, raise=0"]
+	204 -> 206
+	207 [label="player: 1
+hand=K, public=K, 
+my_chips=1, opp_chips=1, raise=0"]
+	204 -> 207
+	208 [label="player: 1
+hand=K, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	203 -> 208 [label=raise]
+	209 [label=chance]
+	208 -> 209 [label=call]
+	210 [label="player: 0
+hand=Q, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	208 -> 210 [label=raise]
+	211 [label=terminal]
+	208 -> 211 [label=fold]
+	212 [label="player: 0
+hand=Q, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	202 -> 212 [label=raise]
+	213 [label=chance]
+	212 -> 213 [label=call]
+	214 [label="player: 1
+hand=K, public=J, 
+my_chips=3, opp_chips=3, raise=0"]
+	213 -> 214
+	215 [label="player: 1
+hand=K, public=Q, 
+my_chips=3, opp_chips=3, raise=0"]
+	213 -> 215
+	216 [label="player: 1
+hand=K, public=K, 
+my_chips=3, opp_chips=3, raise=0"]
+	213 -> 216
+	217 [label="player: 1
+hand=K, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	212 -> 217 [label=raise]
+	218 [label=chance]
+	217 -> 218 [label=call]
+	219 [label=terminal]
+	217 -> 219 [label=fold]
+	220 [label=terminal]
+	212 -> 220 [label=fold]
+	221 [label="player: 0
+hand=K, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	0 -> 221
+	222 [label="player: 1
+hand=J, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	221 -> 222 [label=call]
+	223 [label=chance]
+	222 -> 223 [label=call]
+	224 [label="player: 0
+hand=K, public=J, 
+my_chips=1, opp_chips=1, raise=0"]
+	223 -> 224
+	225 [label="player: 0
+hand=K, public=Q, 
+my_chips=1, opp_chips=1, raise=0"]
+	223 -> 225
+	226 [label="player: 0
+hand=K, public=K, 
+my_chips=1, opp_chips=1, raise=0"]
+	223 -> 226
+	227 [label="player: 0
+hand=K, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	222 -> 227 [label=raise]
+	228 [label=chance]
+	227 -> 228 [label=call]
+	229 [label="player: 1
+hand=J, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	227 -> 229 [label=raise]
+	230 [label=terminal]
+	227 -> 230 [label=fold]
+	231 [label="player: 1
+hand=J, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	221 -> 231 [label=raise]
+	232 [label=chance]
+	231 -> 232 [label=call]
+	233 [label="player: 0
+hand=K, public=J, 
+my_chips=3, opp_chips=3, raise=0"]
+	232 -> 233
+	234 [label="player: 0
+hand=K, public=Q, 
+my_chips=3, opp_chips=3, raise=0"]
+	232 -> 234
+	235 [label="player: 0
+hand=K, public=K, 
+my_chips=3, opp_chips=3, raise=0"]
+	232 -> 235
+	236 [label="player: 0
+hand=K, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	231 -> 236 [label=raise]
+	237 [label=chance]
+	236 -> 237 [label=call]
+	238 [label=terminal]
+	236 -> 238 [label=fold]
+	239 [label=terminal]
+	231 -> 239 [label=fold]
+	240 [label="player: 1
+hand=J, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	0 -> 240
+	241 [label="player: 0
+hand=K, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	240 -> 241 [label=call]
+	242 [label=chance]
+	241 -> 242 [label=call]
+	243 [label="player: 1
+hand=J, public=J, 
+my_chips=1, opp_chips=1, raise=0"]
+	242 -> 243
+	244 [label="player: 1
+hand=J, public=Q, 
+my_chips=1, opp_chips=1, raise=0"]
+	242 -> 244
+	245 [label="player: 1
+hand=J, public=K, 
+my_chips=1, opp_chips=1, raise=0"]
+	242 -> 245
+	246 [label="player: 1
+hand=J, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	241 -> 246 [label=raise]
+	247 [label=chance]
+	246 -> 247 [label=call]
+	248 [label="player: 0
+hand=K, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	246 -> 248 [label=raise]
+	249 [label=terminal]
+	246 -> 249 [label=fold]
+	250 [label="player: 0
+hand=K, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	240 -> 250 [label=raise]
+	251 [label=chance]
+	250 -> 251 [label=call]
+	252 [label="player: 1
+hand=J, public=J, 
+my_chips=3, opp_chips=3, raise=0"]
+	251 -> 252
+	253 [label="player: 1
+hand=J, public=Q, 
+my_chips=3, opp_chips=3, raise=0"]
+	251 -> 253
+	254 [label="player: 1
+hand=J, public=K, 
+my_chips=3, opp_chips=3, raise=0"]
+	251 -> 254
+	255 [label="player: 1
+hand=J, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	250 -> 255 [label=raise]
+	256 [label=chance]
+	255 -> 256 [label=call]
+	257 [label=terminal]
+	255 -> 257 [label=fold]
+	258 [label=terminal]
+	250 -> 258 [label=fold]
+	259 [label="player: 0
+hand=K, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	0 -> 259
+	260 [label="player: 1
+hand=Q, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	259 -> 260 [label=call]
+	261 [label=chance]
+	260 -> 261 [label=call]
+	262 [label="player: 0
+hand=K, public=J, 
+my_chips=1, opp_chips=1, raise=0"]
+	261 -> 262
+	263 [label="player: 0
+hand=K, public=Q, 
+my_chips=1, opp_chips=1, raise=0"]
+	261 -> 263
+	264 [label="player: 0
+hand=K, public=K, 
+my_chips=1, opp_chips=1, raise=0"]
+	261 -> 264
+	265 [label="player: 0
+hand=K, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	260 -> 265 [label=raise]
+	266 [label=chance]
+	265 -> 266 [label=call]
+	267 [label="player: 1
+hand=Q, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	265 -> 267 [label=raise]
+	268 [label=terminal]
+	265 -> 268 [label=fold]
+	269 [label="player: 1
+hand=Q, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	259 -> 269 [label=raise]
+	270 [label=chance]
+	269 -> 270 [label=call]
+	271 [label="player: 0
+hand=K, public=J, 
+my_chips=3, opp_chips=3, raise=0"]
+	270 -> 271
+	272 [label="player: 0
+hand=K, public=Q, 
+my_chips=3, opp_chips=3, raise=0"]
+	270 -> 272
+	273 [label="player: 0
+hand=K, public=K, 
+my_chips=3, opp_chips=3, raise=0"]
+	270 -> 273
+	274 [label="player: 0
+hand=K, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	269 -> 274 [label=raise]
+	275 [label=chance]
+	274 -> 275 [label=call]
+	276 [label=terminal]
+	274 -> 276 [label=fold]
+	277 [label=terminal]
+	269 -> 277 [label=fold]
+	278 [label="player: 1
+hand=Q, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	0 -> 278
+	279 [label="player: 0
+hand=K, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	278 -> 279 [label=call]
+	280 [label=chance]
+	279 -> 280 [label=call]
+	281 [label="player: 1
+hand=Q, public=J, 
+my_chips=1, opp_chips=1, raise=0"]
+	280 -> 281
+	282 [label="player: 1
+hand=Q, public=Q, 
+my_chips=1, opp_chips=1, raise=0"]
+	280 -> 282
+	283 [label="player: 1
+hand=Q, public=K, 
+my_chips=1, opp_chips=1, raise=0"]
+	280 -> 283
+	284 [label="player: 1
+hand=Q, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	279 -> 284 [label=raise]
+	285 [label=chance]
+	284 -> 285 [label=call]
+	286 [label="player: 0
+hand=K, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	284 -> 286 [label=raise]
+	287 [label=terminal]
+	284 -> 287 [label=fold]
+	288 [label="player: 0
+hand=K, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	278 -> 288 [label=raise]
+	289 [label=chance]
+	288 -> 289 [label=call]
+	290 [label="player: 1
+hand=Q, public=J, 
+my_chips=3, opp_chips=3, raise=0"]
+	289 -> 290
+	291 [label="player: 1
+hand=Q, public=Q, 
+my_chips=3, opp_chips=3, raise=0"]
+	289 -> 291
+	292 [label="player: 1
+hand=Q, public=K, 
+my_chips=3, opp_chips=3, raise=0"]
+	289 -> 292
+	293 [label="player: 1
+hand=Q, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	288 -> 293 [label=raise]
+	294 [label=chance]
+	293 -> 294 [label=call]
+	295 [label=terminal]
+	293 -> 295 [label=fold]
+	296 [label=terminal]
+	288 -> 296 [label=fold]
+	297 [label="player: 0
+hand=K, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	0 -> 297
+	298 [label="player: 1
+hand=K, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	297 -> 298 [label=call]
+	299 [label=chance]
+	298 -> 299 [label=call]
+	300 [label="player: 0
+hand=K, public=J, 
+my_chips=1, opp_chips=1, raise=0"]
+	299 -> 300
+	301 [label="player: 0
+hand=K, public=Q, 
+my_chips=1, opp_chips=1, raise=0"]
+	299 -> 301
+	302 [label="player: 0
+hand=K, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	298 -> 302 [label=raise]
+	303 [label=chance]
+	302 -> 303 [label=call]
+	304 [label="player: 1
+hand=K, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	302 -> 304 [label=raise]
+	305 [label=terminal]
+	302 -> 305 [label=fold]
+	306 [label="player: 1
+hand=K, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	297 -> 306 [label=raise]
+	307 [label=chance]
+	306 -> 307 [label=call]
+	308 [label="player: 0
+hand=K, public=J, 
+my_chips=3, opp_chips=3, raise=0"]
+	307 -> 308
+	309 [label="player: 0
+hand=K, public=Q, 
+my_chips=3, opp_chips=3, raise=0"]
+	307 -> 309
+	310 [label="player: 0
+hand=K, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	306 -> 310 [label=raise]
+	311 [label=chance]
+	310 -> 311 [label=call]
+	312 [label=terminal]
+	310 -> 312 [label=fold]
+	313 [label=terminal]
+	306 -> 313 [label=fold]
+	314 [label="player: 1
+hand=K, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	0 -> 314
+	315 [label="player: 0
+hand=K, public=-, 
+my_chips=1, opp_chips=1, raise=0"]
+	314 -> 315 [label=call]
+	316 [label=chance]
+	315 -> 316 [label=call]
+	317 [label="player: 1
+hand=K, public=J, 
+my_chips=1, opp_chips=1, raise=0"]
+	316 -> 317
+	318 [label="player: 1
+hand=K, public=Q, 
+my_chips=1, opp_chips=1, raise=0"]
+	316 -> 318
+	319 [label="player: 1
+hand=K, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	315 -> 319 [label=raise]
+	320 [label=chance]
+	319 -> 320 [label=call]
+	321 [label="player: 0
+hand=K, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	319 -> 321 [label=raise]
+	322 [label=terminal]
+	319 -> 322 [label=fold]
+	323 [label="player: 0
+hand=K, public=-, 
+my_chips=1, opp_chips=3, raise=1"]
+	314 -> 323 [label=raise]
+	324 [label=chance]
+	323 -> 324 [label=call]
+	325 [label="player: 1
+hand=K, public=J, 
+my_chips=3, opp_chips=3, raise=0"]
+	324 -> 325
+	326 [label="player: 1
+hand=K, public=Q, 
+my_chips=3, opp_chips=3, raise=0"]
+	324 -> 326
+	327 [label="player: 1
+hand=K, public=-, 
+my_chips=3, opp_chips=5, raise=2"]
+	323 -> 327 [label=raise]
+	328 [label=chance]
+	327 -> 328 [label=call]
+	329 [label=terminal]
+	327 -> 329 [label=fold]
+	330 [label=terminal]
+	323 -> 330 [label=fold]
+}

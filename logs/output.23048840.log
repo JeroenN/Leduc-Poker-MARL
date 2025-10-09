@@ -1,0 +1,42 @@
+
+###############################################################################
+Hábrók Cluster
+Job 23048840 for user s3799042
+Finished at: Wed Oct  8 17:51:13 CEST 2025
+
+Job details:
+============
+
+Job ID                         : 23048840
+Name                           : cpu_job
+User                           : s3799042
+Partition                      : regularshort
+Nodes                          : omni44
+Number of Nodes                : 1
+Cores                          : 1
+Number of Tasks                : 1
+State                          : COMPLETED  
+Submit                         : 2025-10-08T16:47:36
+Start                          : 2025-10-08T16:47:37
+End                            : 2025-10-08T17:51:08
+Reserved walltime              : 08:00:00
+Used walltime                  : 01:03:31
+Used CPU time                  : 01:02:57 (Efficiency: 99.11%)
+% User (Computation)           : 99.23%
+% System (I/O)                 :  0.77%
+Total memory reserved          : 16G
+Maximum memory used            : 1.59G
+Hints and tips      :
+ 1) You requested much more CPU memory than your program used.
+    Please reduce the requested amount of memory.
+ *) For more information on these issues see:
+    https://wiki.hpc.rug.nl/habrok/additional_information/job_hints
+
+Acknowledgements:
+=================
+
+Please see this page for information about acknowledging Hábrók in your publications:
+
+https://wiki.hpc.rug.nl/habrok/introduction/scientific_output
+
+################################################################################

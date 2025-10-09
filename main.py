@@ -186,6 +186,7 @@ def expand_board_card(node: Node):
     # Chance node has invalid observation so we need to delete it
     node.state = None
 
+
 def build_full_tree():
 
     key = jax.random.PRNGKey(random.randint(0, 100_000))
@@ -209,6 +210,7 @@ def build_full_tree():
 
             next_state = state.replace(
                 _first_player = jnp.array([player_start]),
+                current_player = jnp.array([player_start]),
                 _cards = jnp.array([[p0_card, p1_card, -1]])
             )
 
@@ -227,7 +229,54 @@ def build_full_tree():
 
 root = build_full_tree()
 
+def pretty_observation(obs):
+    print(obs.shape)
+    h = ["J","Q","K","A"][int(jnp.argmax(obs[:4]))]
+    p = ["J","Q","K"][int(jnp.argmax(obs[3:6]))] if obs[3:6].any() else "-"
+    mc = jnp.argmax(obs[6:20]).item()
+    oc = jnp.argmax(obs[20:34]).item()
+    rc = jnp.argmax(obs[34:37]).item()
+    
+    return f"hand={h}, public={p}, \nmy_chips={mc}, opp_chips={oc}, raise={rc}"
 
+from graphviz import Digraph
+def visualize_tree(root, max_depth=4):
+    dot = Digraph(comment="CFR Game Tree")
+    node_counter = [0]
+
+    def add_node(node, parent_id=None, depth=0, node_label = None):
+        if depth > max_depth:
+            return
+        node_id = str(node_counter[0])
+        node_counter[0] += 1
+
+
+        if node.node_type == "player":
+            obs = observe(node.state, node.state.current_player[0])
+            obs = pretty_observation(obs)
+            label = f"{node.node_type}: {node.state.current_player[0]}\n{obs}"
+        else:
+            label = f"{node.node_type}"
+        dot.node(node_id, label)
+
+        if parent_id is not None:
+            dot.edge(parent_id, node_id, node_label)
+
+        if node.state is not None:
+            legal_actions = np.array([a for a, l in zip(actions, node.state.legal_action_mask[0], strict=True) if l])
+            for idx, child in enumerate(getattr(node, "children", [])):
+                add_node(child, node_id, depth + 1, action_names[legal_actions[idx]])
+        else:
+            for idx, child in enumerate(getattr(node, "children", [])):
+                #if depth != 0 or idx == len(getattr(node, "children", [])) - 1:
+                add_node(child, node_id, depth + 1)
+
+    add_node(root)
+    return dot
+
+# Example:
+dot = visualize_tree(root, max_depth=4)
+dot.render(Path(__file__).parent / "game_tree", format="png")
 
 n_player_nodes_round_0 = 0
 n_player_nodes_round_1 = 0
@@ -262,16 +311,7 @@ def kokot(o_s):
     print(f"player={o_s.current_player}, step={o_s._step_count}, first={o_s._first_player}, "
           f"cards={o_s._cards}, last_act={o_s._last_action}, chips={o_s._chips}, "
           f"round={o_s._round}, raises={o_s._raise_count}")
-    
-def pretty_observation(obs):
-    print(obs.shape)
-    h = ["J","Q","K","A"][int(jnp.argmax(obs[:4]))]
-    p = ["J","Q","K"][int(jnp.argmax(obs[3:6]))] if obs[3:6].any() else "-"
-    mc = jnp.argmax(obs[6:20]).item()
-    oc = jnp.argmax(obs[20:34]).item()
-    rc = jnp.argmax(obs[34:37]).item()
-    
-    return f"hand={h}, public={p}, my_chips={mc}, opp_chips={oc}, raise={rc}"
+
 
 def check_bijective_infostate_legal_actions(n: Node):
 

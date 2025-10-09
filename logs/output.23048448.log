@@ -1,0 +1,37 @@
+
+###############################################################################
+Hábrók Cluster
+Job 23048448 for user s3799042
+Finished at: Wed Oct  8 16:44:29 CEST 2025
+
+Job details:
+============
+
+Job ID                         : 23048448
+Name                           : cpu_job
+User                           : s3799042
+Partition                      : regularshort
+Nodes                          : omni44
+Number of Nodes                : 1
+Cores                          : 1
+Number of Tasks                : 1
+State                          : FAILED  
+Submit                         : 2025-10-08T16:44:17
+Start                          : 2025-10-08T16:44:17
+End                            : 2025-10-08T16:44:25
+Reserved walltime              : 08:00:00
+Used walltime                  : 00:00:08
+Used CPU time                  : 00:00:03 (Efficiency: 37.61%)
+% User (Computation)           : 81.89%
+% System (I/O)                 : 18.11%
+Total memory reserved          : 16G
+Maximum memory used            : 185.30M
+
+Acknowledgements:
+=================
+
+Please see this page for information about acknowledging Hábrók in your publications:
+
+https://wiki.hpc.rug.nl/habrok/introduction/scientific_output
+
+################################################################################

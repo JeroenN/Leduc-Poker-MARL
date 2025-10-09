@@ -1,0 +1,60 @@
+The following modules were not unloaded:
+  (Use "module --force purge" to unload all):
+
+  1) 2023.01   2) StdEnv
+Traceback (most recent call last):
+  File "/home3/s3799042/venvs/jax/lib64/python3.11/site-packages/jax/_src/xla_bridge.py", line 853, in backends
+    backend = _init_backend(platform)
+              ^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home3/s3799042/venvs/jax/lib64/python3.11/site-packages/jax/_src/xla_bridge.py", line 935, in _init_backend
+    backend = registration.factory()
+              ^^^^^^^^^^^^^^^^^^^^^^
+  File "/home3/s3799042/venvs/jax/lib64/python3.11/site-packages/jax/_src/xla_bridge.py", line 646, in factory
+    return xla_client.make_c_api_client(plugin_name, updated_options, None)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home3/s3799042/venvs/jax/lib64/python3.11/site-packages/jaxlib/xla_client.py", line 198, in make_c_api_client
+    return _xla.get_c_api_client(plugin_name, options, distributed_client)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+jaxlib.xla_extension.XlaRuntimeError: FAILED_PRECONDITION: No visible GPU devices.
+
+During handling of the above exception, another exception occurred:
+
+Traceback (most recent call last):
+  File "/home3/s3799042/Leduc-Poker-MARL/main.py", line 3, in <module>
+    import pgx
+  File "/home3/s3799042/venvs/jax/lib64/python3.11/site-packages/pgx/__init__.py", line 1, in <module>
+    from pgx._src.api_test import api_test
+  File "/home3/s3799042/venvs/jax/lib64/python3.11/site-packages/pgx/_src/api_test.py", line 21, in <module>
+    from pgx.core import Env, EnvId, State
+  File "/home3/s3799042/venvs/jax/lib64/python3.11/site-packages/pgx/core.py", line 25, in <module>
+    TRUE = jnp.bool_(True)
+           ^^^^^^^^^^^^^^^
+  File "/home3/s3799042/venvs/jax/lib64/python3.11/site-packages/jax/_src/numpy/lax_numpy.py", line 152, in __call__
+    return asarray(x, dtype=self.dtype)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home3/s3799042/venvs/jax/lib64/python3.11/site-packages/jax/_src/numpy/lax_numpy.py", line 2242, in asarray
+    return array(a, dtype=dtype, copy=bool(copy), order=order)  # type: ignore
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home3/s3799042/venvs/jax/lib64/python3.11/site-packages/jax/_src/numpy/lax_numpy.py", line 2197, in array
+    out_array: Array = lax_internal._convert_element_type(
+                       ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home3/s3799042/venvs/jax/lib64/python3.11/site-packages/jax/_src/lax/lax.py", line 558, in _convert_element_type
+    return convert_element_type_p.bind(operand, new_dtype=new_dtype,
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home3/s3799042/venvs/jax/lib64/python3.11/site-packages/jax/_src/core.py", line 422, in bind
+    return self.bind_with_trace(find_top_trace(args), args, params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home3/s3799042/venvs/jax/lib64/python3.11/site-packages/jax/_src/core.py", line 425, in bind_with_trace
+    out = trace.process_primitive(self, map(trace.full_raise, args), params)
+          ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home3/s3799042/venvs/jax/lib64/python3.11/site-packages/jax/_src/core.py", line 913, in process_primitive
+    return primitive.impl(*tracers, **params)
+           ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+  File "/home3/s3799042/venvs/jax/lib64/python3.11/site-packages/jax/_src/dispatch.py", line 87, in apply_primitive
+    outs = fun(*args)
+           ^^^^^^^^^^
+RuntimeError: Unable to initialize backend 'cuda': FAILED_PRECONDITION: No visible GPU devices. (you may need to uninstall the failing plugin package, or set JAX_PLATFORMS=cpu to skip this backend.)
+--------------------
+For simplicity, JAX has removed its internal frames from the traceback of the following exception. Set JAX_TRACEBACK_FILTERING=off to include these.
+srun: error: omni44: task 0: Exited with exit code 1
+srun: Terminating StepId=23048448.0
