@@ -89,7 +89,7 @@ def estimate_policy_from_counts(
 
 
 def main():
-    counts1, legal_by_key1 = collect_opponent_counts(n_games=10000)
+    counts1, legal_by_key1 = collect_opponent_counts(n_games=50000)
 
     steps, vss, exploits, infoset = solve(t_max = 1000)
 
@@ -111,7 +111,7 @@ def main():
     avg_payoff_rand = vs_random(infoset, n_games=10000)
     print(f"Average payoff vs random after CFR training: {avg_payoff_rand}")
 
-    counts2, legal_by_key2 = collect_opponent_counts(n_games=10000, infoset=infoset)
+    counts2, legal_by_key2 = collect_opponent_counts(n_games=50000, infoset=infoset)
 
     # Merge counts and legal actions from both phases
     counts = counts1

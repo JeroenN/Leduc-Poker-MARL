@@ -488,9 +488,17 @@ def solve(
   return steps, vss, exploits, infoset
 
 def main():
-    steps, _, exploits, _ = solve()
+    steps, vss, exploits, infoset = solve(t_max=1000)
+    plt.figure()
     plt.plot(steps, exploits)
     plt.savefig("exploit.png")
+
+    plt.figure()
+    plt.plot(steps, vss)
+    plt.savefig("vs_random.png")
+
+    avg_payoff_rand = vs_random(infoset, n_games=10000)
+    print(f"Average payoff vs random after CFR training: {avg_payoff_rand}")
 
 if __name__ == "__main__":
     main()
