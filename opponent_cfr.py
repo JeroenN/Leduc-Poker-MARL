@@ -1,4 +1,3 @@
-# opponent_cfr.py
 from collections import defaultdict, Counter
 from typing import Dict, List, Tuple
 import numpy as np
@@ -8,7 +7,6 @@ import os
 
 from cfr2 import game, cfr_player, random_player, solve, vs_random  # import base CFR components
 
-# Data structures
 # Counts: maps infoset string -> Counter(action_id -> count)
 Counts = Dict[str, Counter]
 # LegalByKey: maps infoset string -> tuple of legal actions (stable)
@@ -71,6 +69,15 @@ def collect_opponent_counts(n_games: int, infoset = None) -> Tuple[Counts, Legal
 
     return counts, legal_by_key
 
+def save_plot(x, y, xlabel, ylabel, filename):
+    """Generate and save a plot."""
+    plt.figure()
+    plt.plot(x, y)
+    plt.xlabel(xlabel)
+    plt.ylabel(ylabel)
+    plt.savefig(filename)
+    plt.close()
+
 
 def estimate_policy_from_counts(
     counts: Counts,
@@ -95,20 +102,13 @@ def main():
 
     steps, vss, exploits, infoset = solve(t_max = 1000)
 
-    os.makedirs("opponent_cfr", exist_ok=True)
     os.makedirs("opponent_cfr/cfr", exist_ok=True)
 
-    plt.figure()
-    plt.plot(steps, exploits)
-    plt.xlabel("CFR Iterations")
-    plt.ylabel("Exploitability")
-    plt.savefig("opponent_cfr/cfr/exploit.png")
+    save_plot(steps, exploits, "CFR Iterations", "Exploitability",
+            "opponent_cfr/cfr/exploit.png")
+    save_plot(steps, vss, "CFR Iterations", "Average Payoff vs Random",
+            "opponent_cfr/cfr/vs_random.png")
 
-    plt.figure()
-    plt.plot(steps, vss)
-    plt.xlabel("CFR Iterations")
-    plt.ylabel("Average Payoff vs Random")
-    plt.savefig("opponent_cfr/cfr/vs_random.png")
 
     avg_payoff_rand = vs_random(infoset, n_games=10000)
     print(f"Average payoff vs random after CFR training: {avg_payoff_rand}")
@@ -127,6 +127,7 @@ def main():
             assert legal_by_key[key] == la, f"Inconsistent legal actions for infoset {key}"
     
 
+    # Estimate opponent policy π̂ from aggregated counts
     pi_hat = estimate_policy_from_counts(counts, legal_by_key)
 
     # Example: print one estimated policy
@@ -139,17 +140,10 @@ def main():
 
     os.makedirs("opponent_cfr/fixed_opp", exist_ok=True)
 
-    plt.figure()
-    plt.plot(steps_rand, exploits_rand)
-    plt.xlabel("CFR Iterations")
-    plt.ylabel("Exploitability")
-    plt.savefig("opponent_cfr/fixed_opp/exploit.png")
-
-    plt.figure()
-    plt.plot(steps_rand, vss_rand)
-    plt.xlabel("CFR Iterations")
-    plt.ylabel("Average Payoff vs Random")
-    plt.savefig("opponent_cfr/fixed_opp/vs_random.png")
+    save_plot(steps_rand, exploits_rand, "CFR Iterations", "Exploitability",
+              "opponent_cfr/fixed_opp/exploit.png")
+    save_plot(steps_rand, vss_rand, "CFR Iterations", "Average Payoff vs Random",
+              "opponent_cfr/fixed_opp/vs_random.png")
 
     avg_payoff_rand = vs_random(infoset_rand, n_games=10000)
     print(f"Average payoff vs random after CFR training against fixed opponent: {avg_payoff_rand}")
