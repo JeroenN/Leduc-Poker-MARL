@@ -130,12 +130,16 @@ def play_games(p0, p1, n_games: int = 50):
     rewards += play_match(p0, p1)
   return rewards / n_games
 
-def vs_random(infoset: Infoset, n_games: int = 50) -> float:
+def vs_random(infoset: Infoset, n_games: int = 10000) -> float:
 
-  p1 = random_player()
-  p0 = cfr_player(infoset)
+  # p1 = random_player()
+  # p0 = cfr_player(infoset)
 
-  return play_games(p0, p1, n_games)[0]
+  r1 = play_games(cfr_player(infoset, 0), random_player(), n_games)[0]
+  r2 = play_games(random_player(), cfr_player(infoset, 1), n_games)[1]
+
+  # return play_games(p0, p1, n_games)[0]
+  return 0.5 * (r1 + r2)
 
 
 def best_response(infoset: Infoset, state: State, br_player: int = 1):
@@ -440,8 +444,8 @@ def create_tabular_policy(infosets):
 def solve(
       t_max=200,
       mode: str = "selfplay",   # "selfplay" or "vs_fixed"
-      pi_opp: dict[str, dict[int, float]] = None,
-      opp_player: int = 1):
+      pi_opp: dict[str, dict[int, float]] = None
+      ):
 
   exploits = []
   vss = []
@@ -460,12 +464,10 @@ def solve(
           cfr_old(infoset, state, i, t)
     elif mode == "vs_fixed":
         assert pi_opp is not None, "Must provide pi_opp for vs_fixed mode"
-        assert opp_player in (0, 1), "opp_player must be 0 or 1"
 
-        learner = 1 - opp_player
-
-        state = game.new_initial_state()
-        cfr_vs_fixed_opponent(infoset, state, learner, t, pi_opp)
+        for learner in (0, 1):
+          state = game.new_initial_state()
+          cfr_vs_fixed_opponent(infoset, state, learner, t, pi_opp)
     else:
         raise ValueError(f"Unknown mode {mode}")
 
