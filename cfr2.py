@@ -10,7 +10,7 @@ from open_spiel.python.algorithms import sequence_form_lp, exploitability
 from open_spiel.python import policy
 import pyspiel
 
-game = pyspiel.load_game("kuhn_poker")
+game = pyspiel.load_game("leduc_poker")
 
 
 #(v1, v2, pi1, pi2) = sequence_form_lp.solve_zero_sum_game(game)
@@ -65,7 +65,7 @@ class Info:
 
     return info
 
-Infoset = dict[tuple[str, int], Info]
+Infoset = dict[str, Info]
 
 def apply_action(state: State, action: int) -> State:
   next_state = state.clone()
@@ -100,6 +100,8 @@ def cfr_player(infoset: Infoset, player: int=0):
 
 def play_match(p0, p1) -> np.ndarray:
 
+  opponent_obs: list[tuple[str, int]] = []
+
   state = game.new_initial_state()
   while not state.is_terminal():
 
@@ -114,6 +116,8 @@ def play_match(p0, p1) -> np.ndarray:
         action = p0(state)
       else:
         action = p1(state)
+        key = state.information_state_string(1)  # infoset with opponent card
+        opponent_obs.append((key, action))
 
       state.apply_action(action)
 
@@ -328,6 +332,98 @@ def cfr_old(infoset: Infoset, state: State, player_i: int, t: int, p0_p: float =
 
   return expected_value_from_this_node
 
+def cfr_vs_fixed_opponent(
+    infosets: Infoset,
+    state: State,
+    learner: int,           # e.g., 0
+    t: int,                 # iteration index (for averaging weights if you like)
+    pi_opp: dict[str, dict[int, float]],  # learned opponent policy: key -> {action: prob}
+    p0: float = 1.0,        # reach prob for P0 up to this node
+    p1: float = 1.0,        # reach prob for P1 up to this node
+    pc: float = 1.0         # reach prob for chance up to this node
+):
+    # terminal
+    if state.is_terminal():
+        return state.rewards()[learner]
+
+    # chance
+    if state.is_chance_node():
+        v = 0.0
+        for a, prob in state.chance_outcomes():
+            child = state.child(a)
+            v += prob * cfr_vs_fixed_opponent(infosets, child, learner, t, pi_opp, p0, p1, pc * prob)
+        return v
+
+    cur = state.current_player()
+
+    # ---------------------------
+    # Opponent node (fixed policy)
+    # ---------------------------
+    if cur != learner:
+        key = state.information_state_string(cur)  # opponent infoset key
+        acts = state.legal_actions()
+
+        # Fetch π̂_opp(a|key); fallback to uniform over legal acts if missing
+        probs = []
+        table = pi_opp.get(key, None)
+        if table is None:
+            probs = np.ones(len(acts)) / len(acts)
+        else:
+            # collect in action order; if an action missing in dict, treat as 0 then renormalize
+            vec = np.array([table.get(a, 0.0) for a in acts], dtype=float)
+            s = vec.sum()
+            if s <= 0:
+                vec = np.ones(len(acts)) / len(acts)
+            else:
+                vec = vec / s
+            probs = vec
+
+        # Expected value under fixed opponent strategy
+        node_v = 0.0
+        for p_a, a in zip(probs, acts):
+            child = state.child(a)
+            if cur == 0:
+                node_v += p_a * cfr_vs_fixed_opponent(infosets, child, learner, t, pi_opp, p0 * p_a, p1, pc)
+            else:  # cur == 1
+                node_v += p_a * cfr_vs_fixed_opponent(infosets, child, learner, t, pi_opp, p0, p1 * p_a, pc)
+        return float(node_v)
+
+    # ---------------------------
+    # Learner node (regret-matching)
+    # ---------------------------
+    info = Info.get_info(infosets, state, cur)  # this creates/stores only learner’s infosets
+    acts = info.legal_actions
+
+    # current strategy from positive regrets (CFR/CFR+)
+    R_plus = np.maximum(info.cum_regret, 0.0)
+    if R_plus.sum() > 0:
+        info.strategy = R_plus / R_plus.sum()
+    else:
+        info.strategy = np.ones(info.n) / info.n
+
+    # recurse on actions
+    util_a = np.zeros(info.n, dtype=float)
+    node_v = 0.0
+    for k, a in enumerate(acts):
+        p_a = info.strategy[k]
+        child = state.child(a)
+        if cur == 0:
+            util_a[k] = cfr_vs_fixed_opponent(infosets, child, learner, t, pi_opp, p0 * p_a, p1, pc)
+        else:
+            util_a[k] = cfr_vs_fixed_opponent(infosets, child, learner, t, pi_opp, p0, p1 * p_a, pc)
+        node_v += p_a * util_a[k]
+
+    # regret update (only for learner)
+    opp_reach = p1 if learner == 0 else p0
+    info.cum_regret += pc * opp_reach * (util_a - node_v)
+    info.cum_regret = np.maximum(info.cum_regret, 0.0)  # CFR+ clamp (optional)
+
+    # average strategy update for learner (you can use linear weighting t if desired)
+    owner_reach = p0 if learner == 0 else p1
+    info.cum_strategy += owner_reach * info.strategy  # or (t+1)*owner_reach for CFR+
+
+    return float(node_v)
+
 
 def create_tabular_policy(infosets):
   tabular_policy= policy.TabularPolicy(game)
@@ -341,25 +437,37 @@ def create_tabular_policy(infosets):
   return tabular_policy
 
 
-def solve():
+def solve(
+      t_max=200,
+      mode: str = "selfplay",   # "selfplay" or "vs_fixed"
+      pi_opp: dict[str, dict[int, float]] = None,
+      opp_player: int = 1):
 
   exploits = []
   vss = []
   steps = []
 
   infoset: Infoset = dict()
-  t_max = 200
 
   for t in tqdm.tqdm(list(range(t_max))):
 
     # Update strategies from cumulative regret for each infonode
     update_strategy(infoset)
-    for i in range(2):
-      state = game.new_initial_state()
-      cfr_old(infoset, state, i, t)
 
+    if mode == "selfplay":
+        for i in (0, 1):
+          state = game.new_initial_state()
+          cfr_old(infoset, state, i, t)
+    elif mode == "vs_fixed":
+        assert pi_opp is not None, "Must provide pi_opp for vs_fixed mode"
+        assert opp_player in (0, 1), "opp_player must be 0 or 1"
 
+        learner = 1 - opp_player
 
+        state = game.new_initial_state()
+        cfr_vs_fixed_opponent(infoset, state, learner, t, pi_opp)
+    else:
+        raise ValueError(f"Unknown mode {mode}")
 
     if (t % 50 == 0) or (t == (t_max - 1)):
 
@@ -377,9 +485,12 @@ def solve():
       steps.append(t)
       exploits.append(e)
       vss.append(vs)
-  return steps, vss, exploits
+  return steps, vss, exploits, infoset
 
-steps, vss, exploits = solve()
+def main():
+    steps, _, exploits, _ = solve()
+    plt.plot(steps, exploits)
+    plt.savefig("exploit.png")
 
-plt.plot(steps, exploits)
-plt.savefig("exploit.png")
+if __name__ == "__main__":
+    main()
