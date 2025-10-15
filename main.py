@@ -15,8 +15,9 @@ import numpy as np
 import tqdm
 import matplotlib.pyplot as plt
 
+GAME = "leduc_holdem"
 
-env = pgx.make("leduc_holdem")
+env = pgx.make(GAME)
 
 init = jax.jit(jax.vmap(env.init))  # vectorize and JIT-compile
 step = jax.jit(jax.vmap(env.step))
@@ -25,18 +26,31 @@ act_randomly = jax.jit(act_randomly)
 batch_size = 1
 i_steps = 0
 
-cards = [0, 1, 2]  # J, Q, K (ranks: 0<J<1<Q<2<K)
-deck = [0, 0, 1, 1, 2, 2]
 
-CALL = 0
-RAISE = 1
-FOLD = 2
-actions = np.array([CALL, RAISE, FOLD])
-action_names = {
-    CALL: "call",
-    RAISE: "raise",
-    FOLD: "fold"
-}
+cards = [0, 1, 2]  # J, Q, K (ranks: 0<J<1<Q<2<K)
+
+if GAME == "leduc_holdem":
+    deck = [0, 0, 1, 1, 2, 2]
+    CALL = 0
+    RAISE = 1
+    FOLD = 2
+    actions = np.array([CALL, RAISE, FOLD])
+    action_names = {
+        CALL: "call",
+        RAISE: "raise",
+        FOLD: "fold"
+    }
+
+elif GAME == "kuhn_poker":
+    deck = [0, 1, 2]
+    BET = 0
+    PASS = 1
+    actions = np.array([BET, PASS])
+    action_names = {
+        BET: "bet",
+        PASS: "pass"
+    }
+
 
 @dataclass
 class Node:
@@ -69,7 +83,22 @@ class Node:
         return tuple(self.observation.tolist())
 
 TRUE = jnp.bool_(True)
-def observe(state: State, player_id) -> jnp.ndarray:
+
+def observe_kuhn(state: State, player_id) -> jnp.ndarray:
+    """
+    Index   Meaning
+    0~2     J ~ K in hand
+    3~4     0~1 chips for the current player
+    5~6     0~1 chips for the opponent
+    """
+    obs = jnp.zeros(7, dtype=jnp.bool_)
+    obs = obs.at[state._cards[player_id]].set(TRUE)
+    obs = obs.at[3 + state._pot[player_id]].set(TRUE)
+    obs = obs.at[5 + state._pot[1 - player_id]].set(TRUE)
+
+    return obs
+
+def observe_leduc(state: State, player_id) -> jnp.ndarray:
     """
     Copied from pgx leduce poker
 
@@ -126,10 +155,11 @@ def all_board_deals(state: State) -> list[tuple[int, float, float, float]]:
     return out
 
 def expand_player_node(node: Node):
-
-    
     state = node.state
-    node.observation = np.array(observe(state, state.current_player[0]))
+    if GAME == "leduc_holdem":
+        node.observation = np.array(observe_leduc(state, state.current_player[0]))
+    elif GAME == "kuhn_poker":
+        node.observation = np.array(observe_kuhn(state, state.current_player[0]))
 
     for action, legal in zip(actions, state.legal_action_mask[0], strict=True):
 
@@ -149,7 +179,7 @@ def expand_player_node(node: Node):
             # End
             child.node_type = "terminal"
             child.reward_p0 = s_next.rewards[0][0]
-        elif (state._round[0] == 0) and (s_next._round[0] == 1):
+        elif GAME == "leduc_holdem" and (state._round[0] == 0) and (s_next._round[0] == 1):
             # Round transition
             child.node_type = "chance"
             expand_board_card(child)
@@ -208,12 +238,17 @@ def build_full_tree():
             p0_prob = p0_prob_deal * prob_start
             p1_prob = p1_prob_deal * prob_start
 
-            next_state = state.replace(
-                _first_player = jnp.array([player_start]),
-                current_player = jnp.array([player_start]),
-                _cards = jnp.array([[p0_card, p1_card, -1]])
-            )
-
+            if GAME == "leduc_holdem":
+                next_state = state.replace(
+                    _first_player = jnp.array([player_start]),
+                    current_player = jnp.array([player_start]),
+                    _cards = jnp.array([[p0_card, p1_card, -1]])
+                )
+            elif GAME == "kuhn_poker":
+                next_state = state.replace(
+                    _cards = jnp.array([[p0_card, p1_card, -1]])
+                )
+                                
             player_node = Node(
                 node_type="player",
                 state=next_state,
@@ -229,8 +264,7 @@ def build_full_tree():
 
 root = build_full_tree()
 
-def pretty_observation(obs):
-    print(obs.shape)
+def pretty_observation_leduc(obs):
     h = ["J","Q","K","A"][int(jnp.argmax(obs[:4]))]
     p = ["J","Q","K"][int(jnp.argmax(obs[3:6]))] if obs[3:6].any() else "-"
     mc = jnp.argmax(obs[6:20]).item()
@@ -238,6 +272,19 @@ def pretty_observation(obs):
     rc = jnp.argmax(obs[34:37]).item()
     
     return f"hand={h}, public={p}, \nmy_chips={mc}, opp_chips={oc}, raise={rc}"
+
+def pretty_observation_kuhn(obs):
+    """
+    Index   Meaning
+    0~2     J ~ K in hand
+    3~4     0~1 chips for the current player
+    5~6     0~1 chips for the opponent
+    """
+    h = ["J","Q","K"][int(jnp.argmax(obs[:3]))]
+    mc = jnp.argmax(obs[3:4]).item()
+    oc = jnp.argmax(obs[4:5]).item()
+
+    return f"hand={h},\nmy_chips={mc}, opp_chips={oc}"
 
 from graphviz import Digraph
 def visualize_tree(root, max_depth=4):
@@ -250,11 +297,16 @@ def visualize_tree(root, max_depth=4):
         node_id = str(node_counter[0])
         node_counter[0] += 1
 
-
         if node.node_type == "player":
-            obs = observe(node.state, node.state.current_player[0])
-            obs = pretty_observation(obs)
+            if GAME == "leduc_holdem":
+                obs = observe_leduc(node.state, node.state.current_player[0])
+                obs = pretty_observation_leduc(obs)
+            if GAME == "kuhn_poker":
+                obs = observe_kuhn(node.state, node.state.current_player[0])
+                obs = pretty_observation_kuhn(obs)
             label = f"{node.node_type}: {node.state.current_player[0]}\n{obs}"
+        elif node.node_type == "terminal":
+            label = f"{node.node_type}, reward: {node.state.rewards}"
         else:
             label = f"{node.node_type}"
         dot.node(node_id, label)
@@ -268,14 +320,14 @@ def visualize_tree(root, max_depth=4):
                 add_node(child, node_id, depth + 1, action_names[legal_actions[idx]])
         else:
             for idx, child in enumerate(getattr(node, "children", [])):
-                #if depth != 0 or idx == len(getattr(node, "children", [])) - 1:
-                add_node(child, node_id, depth + 1)
+                #if depth != 0 or idx == 7:
+               add_node(child, node_id, depth + 1)
 
     add_node(root)
     return dot
 
 # Example:
-dot = visualize_tree(root, max_depth=4)
+dot = visualize_tree(root, max_depth=3)
 dot.render(Path(__file__).parent / "game_tree", format="png")
 
 n_player_nodes_round_0 = 0
@@ -292,17 +344,19 @@ def check_every_player_has_valid_observation(n: Node):
 
         assert n.observation.sum() > 0, f"sum {n.observation}"
 
-        if s._round[0] == 1:
+
+        if  s._round[0] == 1:
             n_player_nodes_round_1 += 1
             assert (n.observation[3:6].sum() == 1),  f"round 1 and sum = {n.observation[3:6].sum()}"
         else:
             n_player_nodes_round_0 += 1
-    
+        
     for c in n.children:
         check_every_player_has_valid_observation(c)
 
-check_every_player_has_valid_observation(root)
-n_player_nodes_round_0, n_player_nodes_round_1
+if GAME == "leduc_holdem": 
+    check_every_player_has_valid_observation(root)
+    n_player_nodes_round_0, n_player_nodes_round_1
 
 
 _check = dict()
@@ -339,8 +393,8 @@ def check_bijective_infostate_legal_actions(n: Node):
                 print(f"Legal o={original_legal}")
                 print(f"Legal i={incoming_legal}")
 
-                print(f"Obs o={pretty_observation(original_observation)}")
-                print(f"Obs i={pretty_observation(incoming_observation)}\n\n")
+                print(f"Obs o={pretty_observation_leduc(original_observation)}")
+                print(f"Obs i={pretty_observation_leduc(incoming_observation)}\n\n")
 
         else:
             _check[k] = (incoming_observation, incoming_legal, incoming_state)
@@ -547,7 +601,10 @@ def vs_random(infoset: dict[tuple[bool], Info]) -> float:
             key, subkey = jax.random.split(key)
 
             if state.current_player[0] == 0:
-                action = play_strategy(observe(state, jnp.int32(0)), infoset)
+                if GAME == "leduc_holdem":
+                    action = play_strategy(observe_leduc(state, jnp.int32(0)), infoset)
+                elif GAME == "kuhn_poker":
+                    action = play_strategy(observe_kuhn(state, jnp.int32(0)), infoset) 
             else:
                 action = act_randomly(subkey, state.legal_action_mask)
         
