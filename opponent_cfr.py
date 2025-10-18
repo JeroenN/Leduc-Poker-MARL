@@ -1,9 +1,9 @@
 from collections import defaultdict, Counter
-from typing import Dict, List, Tuple
+from typing import Dict, Tuple
 import numpy as np
-from tqdm import tqdm
-import matplotlib.pyplot as plt
 import os
+from open_spiel.python import policy
+from utils import save_comparison_with_ci, save_gap_mean_comparison, save_exploitability_comparison
 
 from cfr2 import game, cfr_player, random_player, solve, vs_random  # import base CFR components
 
@@ -69,15 +69,6 @@ def collect_opponent_counts(n_games: int, infoset = None) -> Tuple[Counts, Legal
 
     return counts, legal_by_key
 
-def save_plot(x, y, xlabel, ylabel, filename):
-    """Generate and save a plot."""
-    plt.figure()
-    plt.plot(x, y)
-    plt.xlabel(xlabel)
-    plt.ylabel(ylabel)
-    plt.savefig(filename)
-    plt.close()
-
 
 def estimate_policy_from_counts(
     counts: Counts,
@@ -97,35 +88,29 @@ def estimate_policy_from_counts(
     return pi_hat
 
 
-def main():
-    counts1, legal_by_key1 = collect_opponent_counts(n_games=50000)
-
-    steps, vss, exploits, infoset = solve(t_max = 1000)
-
-    os.makedirs("opponent_cfr/cfr", exist_ok=True)
-
-    save_plot(steps, exploits, "CFR Iterations", "Exploitability",
-            "opponent_cfr/cfr/exploit.png")
-    save_plot(steps, vss, "CFR Iterations", "Average Payoff vs Random",
-            "opponent_cfr/cfr/vs_random.png")
-
-
-    avg_payoff_rand = vs_random(infoset, n_games=10000)
-    print(f"Average payoff vs random after CFR training: {avg_payoff_rand}")
-
-    counts2, legal_by_key2 = collect_opponent_counts(n_games=50000, infoset=infoset)
-
-    # Merge counts and legal actions from both phases
-    counts = counts1
-    for key, counter in counts2.items():
-        counts[key].update(counter)
-    legal_by_key = legal_by_key1
-    for key, la in legal_by_key2.items():
-        if key not in legal_by_key:
-            legal_by_key[key] = la
-        else:
-            assert legal_by_key[key] == la, f"Inconsistent legal actions for infoset {key}"
+def dict_policy_to_tabular(game, pi_dict):
+    tab = policy.TabularPolicy(game)
+    for key, table in pi_dict.items():
+        if key not in tab.state_lookup:
+            continue
+        i = tab.state_lookup[key]
+        probs = np.zeros(game.num_distinct_actions(), dtype=float)
+        s = sum(table.values())
+        if s <= 0:
+            continue
+        for a, p in table.items():
+            probs[a] = p / s
+        tab.action_probability_array[i] = probs
+    return tab
     
+
+def main():
+    counts, legal_by_key = collect_opponent_counts(n_games=100000)
+
+    steps, vss, vss_se, exploits, gap_mean_hist, infoset = solve(t_max = 500)
+
+    avg_payoff_rand = vs_random(infoset, n_games=50000)
+    print(f"Average payoff vs random after CFR training: {avg_payoff_rand}")
 
     # Estimate opponent policy π̂ from aggregated counts
     pi_hat = estimate_policy_from_counts(counts, legal_by_key)
@@ -136,16 +121,32 @@ def main():
     print("Legal actions:", legal_by_key[some_key])
     print("Estimated π̂:", pi_hat[some_key])
 
-    steps_rand, vss_rand, exploits_rand, infoset_rand = solve(t_max = 1000, mode="vs_fixed", pi_opp=pi_hat)
+    eval_opp_tab = dict_policy_to_tabular(game, pi_hat)
 
-    os.makedirs("opponent_cfr/fixed_opp", exist_ok=True)
+    steps_rand, vss_rand, vss_rand_se, exploits_rand, gap_mean_hist_rand, infoset_rand = solve(t_max = 500, mode="vs_fixed", pi_opp=pi_hat,eval_opp_tab=eval_opp_tab)
+    
+    os.makedirs("comparison", exist_ok=True)
 
-    save_plot(steps_rand, exploits_rand, "CFR Iterations", "Exploitability",
-              "opponent_cfr/fixed_opp/exploit.png")
-    save_plot(steps_rand, vss_rand, "CFR Iterations", "Average Payoff vs Random",
-              "opponent_cfr/fixed_opp/vs_random.png")
+    save_comparison_with_ci(
+        steps, vss, np.array(vss_se), "CFR (self-play)",
+        steps_rand, vss_rand, np.array(vss_rand_se), "OCFR (vs fixed)",
+        "CFR Iterations", "Average Payoff vs Random",
+        "comparison/vs_random_comparison_std.pdf"
+    )
 
-    avg_payoff_rand = vs_random(infoset_rand, n_games=10000)
+    save_exploitability_comparison(
+        steps, exploits, "CFR (self-play)",
+        steps_rand, exploits_rand, "OCFR (vs fixed)",
+        filename="comparison/exploitability_comparison.pdf"
+    )
+
+    save_gap_mean_comparison(
+        steps, gap_mean_hist,
+        steps_rand, gap_mean_hist_rand,
+        filename="comparison/gap_to_br_mean.pdf"
+    )
+
+    avg_payoff_rand = vs_random(infoset_rand, n_games=50000)
     print(f"Average payoff vs random after CFR training against fixed opponent: {avg_payoff_rand}")
 
 if __name__ == "__main__":

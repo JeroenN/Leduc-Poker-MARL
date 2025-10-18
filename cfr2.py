@@ -2,23 +2,13 @@ import random
 import pyspiel
 from pyspiel import State
 import numpy as np
-from dataclasses import dataclass
 import random
-from matplotlib import pyplot as plt
 import tqdm
-from open_spiel.python.algorithms import sequence_form_lp, exploitability
+from open_spiel.python.algorithms import exploitability, best_response
 from open_spiel.python import policy
 import pyspiel
 
 game = pyspiel.load_game("leduc_poker")
-
-
-#(v1, v2, pi1, pi2) = sequence_form_lp.solve_zero_sum_game(game)
-#merged_policy = policy.merge_tabular_policies([pi1, pi2], game)
-#exploitability.exploitability(game, merged_policy)
-
-
-#tabular_policy_player2 = policy.TabularPolicy(game)
 
 class Info:
 
@@ -89,6 +79,7 @@ def update_strategy(infoset: Infoset):
   for info in infoset.values():
     info.update_strategy_from_cum_regret()
 
+
 def cfr_player(infoset: Infoset, player: int=0):
 
   def act(state: State):
@@ -97,6 +88,7 @@ def cfr_player(infoset: Infoset, player: int=0):
     return action
 
   return act
+
 
 def play_match(p0, p1) -> np.ndarray:
 
@@ -123,63 +115,29 @@ def play_match(p0, p1) -> np.ndarray:
 
   return np.array(state.rewards())
 
+
 def play_games(p0, p1, n_games: int = 50):
-
-  rewards = np.zeros(2)
-  for _ in range(n_games):
-    rewards += play_match(p0, p1)
-  return rewards / n_games
-
-def vs_random(infoset: Infoset, n_games: int = 10000) -> float:
-
-  # p1 = random_player()
-  # p0 = cfr_player(infoset)
-
-  r1 = play_games(cfr_player(infoset, 0), random_player(), n_games)[0]
-  r2 = play_games(random_player(), cfr_player(infoset, 1), n_games)[1]
-
-  # return play_games(p0, p1, n_games)[0]
-  return 0.5 * (r1 + r2)
+    """Play n_games and return  all rewards."""
+    all_rewards = np.zeros((n_games, 2))
+    for i in range(n_games):
+        all_rewards[i] = play_match(p0, p1)
+    return all_rewards
 
 
-def best_response(infoset: Infoset, state: State, br_player: int = 1):
-  if state.is_terminal():
-    return state.rewards()[br_player]
-
-
-  if state.is_chance_node():
-    expected_reward = 0
-
-    for action, prob in state.chance_outcomes():
-      next_state = apply_action(state, action)
-      expected_reward += prob * best_response(infoset, next_state, br_player)
-
-    return expected_reward
-
-  current_player = state.current_player()
-  info = Info.get_info(infoset, state, current_player)
-
-  if current_player == br_player:
-    values = []
-    for action in state.legal_actions():
-      next_state = apply_action(state, action)
-      values.append(best_response(infoset, next_state, br_player))
-    return max(values)
-
-  else:
-    value = 0
-    for action, p_action in zip(info.legal_actions, info.policy, strict=True):
-      next_state = apply_action(state, action)
-      value += p_action * best_response(infoset, next_state, br_player)
-
-    return value
-
-def exploitability1(infoset: Infoset) -> float:
-    state = game.new_initial_state()
-    br0 = best_response(infoset, state, br_player=0)
-    state = game.new_initial_state()
-    br1 = best_response(infoset, state, br_player=1)
-    return (1/2) * (br0 + br1)
+def vs_random(infoset: Infoset, n_games: int = 500):
+    """Return mean and standard error of payoff vs random."""
+    # Player 0 vs random
+    rewards1 = play_games(cfr_player(infoset, 0), random_player(), n_games)
+    # Random vs Player 1
+    rewards2 = play_games(random_player(), cfr_player(infoset, 1), n_games)
+    
+    # Payoffs for the learner in both seatings
+    payoffs = np.concatenate([rewards1[:,0], rewards2[:,1]])
+    
+    mean = np.mean(payoffs)
+    std = np.std(payoffs, ddof=1)
+    se = std / np.sqrt(len(payoffs))
+    return mean, se
 
 
 # my, op, env
@@ -220,58 +178,9 @@ weighting_specs = {
 }
 
 weighting: str | None = None
-
-
-
-def cfr(infosets: Infoset, state: State, player_i: int, t: int, p0_p: float=1.0, p1_p: float=1.0, p_c: float=1.0):
-    if state.is_terminal():
-        return state.rewards()[player_i]
-
-
-    if state.is_chance_node():
-        outcomes = state.chance_outcomes() 
-        value = 0.0
-        for action, prob in outcomes:
-            next_state = state.child(action)
-            value += prob * cfr(infosets, next_state, player_i, t, p0_p, p1_p, p_c * prob)
-        return value
-
-    curr_player = state.current_player()
-
-    infoset =  Info.get_info(infosets, state, curr_player)
-  
-    positive_regret = np.maximum(infoset.cum_regret, 0)
-    if positive_regret.sum() > 0:
-        infoset.strategy = positive_regret / positive_regret.sum()
-    else:
-        infoset.strategy = np.ones(infoset.n) / infoset.n
-
-    node_value = 0.0
-    action_values = np.zeros(infoset.n)
-
-    for idx, a in enumerate(infoset.legal_actions):
-        next_state = state.child(a)
-        if curr_player == 0:
-            v = cfr(infosets, next_state, player_i, t, p0_p * infoset.strategy[idx], p1_p, p_c)
-        elif curr_player == 1:
-            v = cfr(infosets, next_state, player_i, t, p0_p, p1_p * infoset.strategy[idx], p_c)
-        else:
-            v = cfr(infosets, next_state, player_i, t, p0_p, p1_p, p_c)
-        action_values[idx] = v
-        node_value += infoset.strategy[idx] * v
-
-    if curr_player == player_i:
-        opp_reach = p1_p if player_i == 0 else p0_p
-        reach_weight = opp_reach * p_c
-        infoset.cum_regret += reach_weight * (action_values - node_value)
-        infoset.cum_strategy += (p0_p if player_i == 0 else p1_p) * infoset.strategy
-
-    return node_value
-
-
     
 
-def cfr_old(infoset: Infoset, state: State, player_i: int, t: int, p0_p: float = 1.0, p1_p: float = 1.0, env_p: float = 1.0):
+def cfr(infoset: Infoset, state: State, player_i: int, t: int, p0_p: float = 1.0, p1_p: float = 1.0, env_p: float = 1.0):
 
   if state.is_terminal():
     return state.rewards()[player_i]
@@ -281,7 +190,7 @@ def cfr_old(infoset: Infoset, state: State, player_i: int, t: int, p0_p: float =
 
     for action, prob in state.chance_outcomes():
       next_state = apply_action(state, action)
-      expected_reward += prob * cfr_old(infoset, next_state, player_i, t, p0_p, p1_p, env_p * prob)
+      expected_reward += prob * cfr(infoset, next_state, player_i, t, p0_p, p1_p, env_p * prob)
 
     return expected_reward
 
@@ -303,9 +212,9 @@ def cfr_old(infoset: Infoset, state: State, player_i: int, t: int, p0_p: float =
     next_state = apply_action(state, action)
 
     if current_player == 0:
-      r = cfr_old(infoset, next_state, player_i, t, p0_p * p_action, p1_p, env_p)
+      r = cfr(infoset, next_state, player_i, t, p0_p * p_action, p1_p, env_p)
     elif current_player == 1:
-      r = cfr_old(infoset, next_state, player_i, t, p0_p, p1_p * p_action, env_p)
+      r = cfr(infoset, next_state, player_i, t, p0_p, p1_p * p_action, env_p)
     else:
       assert False, f"Curr player = {current_player}"
 
@@ -436,20 +345,49 @@ def create_tabular_policy(infosets):
     policy_probs = np.zeros(game.num_distinct_actions())
     policy_probs[infoset.legal_actions] = infoset.policy
     tabular_policy.action_probability_array[i] = policy_probs
-
-
   return tabular_policy
+
+
+def value_vs_fixed_policy(game, learner_tab, opp_tab, learner_id, n_games=20000):
+    def player_from_tab(tab_pol, pid):
+        def act(state):
+            ap = tab_pol.action_probabilities(state, pid)
+            acts, probs = zip(*ap.items())
+            return np.random.choice(acts, p=probs)
+        return act
+
+    payoffs = []
+    for _ in range(n_games):
+        state = game.new_initial_state()
+        while not state.is_terminal():
+            if state.is_chance_node():
+                acts, probs = zip(*state.chance_outcomes())
+                state.apply_action(np.random.choice(acts, p=probs))
+            else:
+                cur = state.current_player()
+                if cur == 0:
+                    a = (player_from_tab(learner_tab, 0) if learner_id==0 else player_from_tab(opp_tab,0))(state)
+                else:
+                    a = (player_from_tab(opp_tab, 1) if learner_id==0 else player_from_tab(learner_tab,1))(state)
+                state.apply_action(a)
+        payoffs.append(state.rewards()[learner_id])
+    payoffs = np.array(payoffs)
+    return float(payoffs.mean()), float(payoffs.std(ddof=1))
 
 
 def solve(
       t_max=200,
       mode: str = "selfplay",   # "selfplay" or "vs_fixed"
-      pi_opp: dict[str, dict[int, float]] = None
+      pi_opp: dict[str, dict[int, float]] = None,
+      eval_opp_tab=None,
+      n_eval_mc=5000
       ):
 
   exploits = []
   vss = []
+  vss_se = []
   steps = []
+  gap_mean_hist = []
 
   infoset: Infoset = dict()
 
@@ -461,7 +399,7 @@ def solve(
     if mode == "selfplay":
         for i in (0, 1):
           state = game.new_initial_state()
-          cfr_old(infoset, state, i, t)
+          cfr(infoset, state, i, t)
     elif mode == "vs_fixed":
         assert pi_opp is not None, "Must provide pi_opp for vs_fixed mode"
 
@@ -474,33 +412,26 @@ def solve(
     if (t % 50 == 0) or (t == (t_max - 1)):
 
       # Calculate the final policy from cumulative strategy for each infonode
-      #avg_pi = compute_average_policy(infoset)
       update_policy(infoset)
-      tabular_policy = create_tabular_policy(infoset)
-      e = exploitability.exploitability(game, tabular_policy)
+      learner_tab = create_tabular_policy(infoset)
+      e = exploitability.exploitability(game, learner_tab)
+      eval_tab = eval_opp_tab if eval_opp_tab is not None else learner_tab
 
+      root = game.new_initial_state()
+      br0 = best_response.BestResponsePolicy(game, 0, eval_tab).value(root)
+      br1 = best_response.BestResponsePolicy(game, 1, eval_tab).value(root)
 
-      #e = exploitability(infoset)
-      #pyspiel.exploitability(game, avg_policy)
-      vs = vs_random(infoset, n_games=10)
+      J0, _ = value_vs_fixed_policy(game, learner_tab, eval_tab, 0, n_eval_mc)
+      J1, _ = value_vs_fixed_policy(game, learner_tab, eval_tab, 1, n_eval_mc)
+
+      g0 = br0 - J0; g1 = br1 - J1
+      gap_mean_hist.append(0.5 * (g0 + g1))
+
+      vs, vs_se = vs_random(infoset, n_games=1000)
 
       steps.append(t)
       exploits.append(e)
       vss.append(vs)
-  return steps, vss, exploits, infoset
+      vss_se.append(vs_se)
 
-def main():
-    steps, vss, exploits, infoset = solve(t_max=1000)
-    plt.figure()
-    plt.plot(steps, exploits)
-    plt.savefig("exploit.png")
-
-    plt.figure()
-    plt.plot(steps, vss)
-    plt.savefig("vs_random.png")
-
-    avg_payoff_rand = vs_random(infoset, n_games=10000)
-    print(f"Average payoff vs random after CFR training: {avg_payoff_rand}")
-
-if __name__ == "__main__":
-    main()
+  return steps, vss, vss_se, exploits, gap_mean_hist, infoset
