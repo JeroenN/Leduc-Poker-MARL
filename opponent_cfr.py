@@ -4,8 +4,9 @@ import numpy as np
 import os
 from open_spiel.python import policy
 from utils import save_comparison_with_ci, save_gap_mean_comparison, save_exploitability_comparison
+import argparse
 
-from cfr2 import game, cfr_player, random_player, solve, vs_random  # import base CFR components
+from cfr2 import game, random_player, solve, vs_random, mixed_player, vs_mixed  # import base CFR components
 
 # Counts: maps infoset string -> Counter(action_id -> count)
 Counts = Dict[str, Counter]
@@ -34,9 +35,9 @@ def play_match_with_log(p0, p1, log_seat: int):
     return np.array(state.rewards()), obs
 
 
-def collect_opponent_counts(n_games: int, infoset = None) -> Tuple[Counts, LegalByKey]:
+def collect_opponent_counts(n_games: int, infoset = None, opponent_type: str = "random") -> Tuple[Counts, LegalByKey]:
     """
-    Collect action counts for the OPPONENT in both seating positions:
+    Collect action counts for the OPPONENT in both seating positions, by playing random against him:
       - Case 1: You are seat 0, opponent is seat 1 -> log seat 1
       - Case 2: You are seat 1, opponent is seat 0 -> log seat 0
     """
@@ -46,8 +47,11 @@ def collect_opponent_counts(n_games: int, infoset = None) -> Tuple[Counts, Legal
     if infoset is None: infoset = {}
 
     # --- Case 1: Opponent sits at seat 1 ---
-    p_you_0 = cfr_player(infoset, player=0)
-    p_opp_1 = random_player()
+    p_you_0 = random_player()
+    if opponent_type == "mixed":
+        p_opp_1 = mixed_player(infoset, player=1)
+    else:
+        p_opp_1 = random_player()
     for _ in range(n_games):
         _, obs = play_match_with_log(p_you_0, p_opp_1, log_seat=1)
         for key, a, legal in obs:
@@ -57,8 +61,11 @@ def collect_opponent_counts(n_games: int, infoset = None) -> Tuple[Counts, Legal
             assert legal_by_key[key] == la
 
     # --- Case 2: Opponent sits at seat 0 ---
-    p_opp_0 = random_player()
-    p_you_1 = cfr_player(infoset, player=1)
+    if opponent_type == "mixed":
+        p_opp_0 = mixed_player(infoset, player=0)
+    else:
+        p_opp_0 = random_player()
+    p_you_1 = random_player()
     for _ in range(n_games):
         _, obs = play_match_with_log(p_opp_0, p_you_1, log_seat=0)
         for key, a, legal in obs:
@@ -105,12 +112,26 @@ def dict_policy_to_tabular(game, pi_dict):
     
 
 def main():
-    counts, legal_by_key = collect_opponent_counts(n_games=100000)
+    parser = argparse.ArgumentParser(description="Train CFR and OCFR against different opponent types.")
+    parser.add_argument(
+        "--opponent_type",
+        type=str,
+        default="random",
+        choices=["random", "mixed"],
+        help="Type of opponent to train against: 'random' or 'mixed' (50/50 CFR+random)."
+    )
+    args = parser.parse_args()
+    opponent_type = args.opponent_type
 
     steps, vss, vss_se, exploits, gap_mean_hist, infoset = solve(t_max = 500)
+    
+    counts, legal_by_key = collect_opponent_counts(n_games=100000, infoset=infoset, opponent_type=opponent_type)
 
-    avg_payoff_rand = vs_random(infoset, n_games=50000)
-    print(f"Average payoff vs random after CFR training: {avg_payoff_rand}")
+    if opponent_type == "mixed":
+        avg_payoff_rand = vs_mixed(infoset, n_games=50000)
+    else:
+        avg_payoff_rand = vs_random(infoset, n_games=50000)
+    print(f"Average payoff vs {opponent_type} after CFR training: {avg_payoff_rand}")
 
     # Estimate opponent policy π̂ from aggregated counts
     pi_hat = estimate_policy_from_counts(counts, legal_by_key)
@@ -123,31 +144,37 @@ def main():
 
     eval_opp_tab = dict_policy_to_tabular(game, pi_hat)
 
-    steps_rand, vss_rand, vss_rand_se, exploits_rand, gap_mean_hist_rand, infoset_rand = solve(t_max = 500, mode="vs_fixed", pi_opp=pi_hat,eval_opp_tab=eval_opp_tab)
+    steps_fixed, vss_fixed, vss_fixed_se, exploits_fixed, gap_mean_hist_fixed, infoset_fixed = solve(t_max = 500, mode="vs_fixed", pi_opp=pi_hat,eval_opp_tab=eval_opp_tab)
     
     os.makedirs("comparison", exist_ok=True)
 
+    y_axis_avg_payoff_plot = (
+        "Average Payoff vs Mixed" if opponent_type == "mixed" else "Average Payoff vs Random"
+    )
+
     save_comparison_with_ci(
         steps, vss, np.array(vss_se), "CFR (self-play)",
-        steps_rand, vss_rand, np.array(vss_rand_se), "OCFR (vs fixed)",
-        "CFR Iterations", "Average Payoff vs Random",
-        "comparison/vs_random_comparison_std.pdf"
+        steps_fixed, vss_fixed, np.array(vss_fixed_se), "OCFR (vs fixed)",
+        "CFR Iterations", y_axis_avg_payoff_plot,
+        f"comparison/vs_{opponent_type}_comparison_std.pdf"
     )
 
     save_exploitability_comparison(
         steps, exploits, "CFR (self-play)",
-        steps_rand, exploits_rand, "OCFR (vs fixed)",
+        steps_fixed, exploits_fixed, "OCFR (vs fixed)",
         filename="comparison/exploitability_comparison.pdf"
     )
 
     save_gap_mean_comparison(
         steps, gap_mean_hist,
-        steps_rand, gap_mean_hist_rand,
+        steps_fixed, gap_mean_hist_fixed,
         filename="comparison/gap_to_br_mean.pdf"
     )
-
-    avg_payoff_rand = vs_random(infoset_rand, n_games=50000)
-    print(f"Average payoff vs random after CFR training against fixed opponent: {avg_payoff_rand}")
+    if opponent_type == "mixed":
+        avg_payoff_fixed = vs_mixed(infoset_fixed, n_games=50000)
+    else:
+        avg_payoff_fixed = vs_random(infoset_fixed, n_games=50000)
+    print(f"Average payoff vs {opponent_type} after CFR training against fixed opponent: {avg_payoff_fixed}")
 
 if __name__ == "__main__":
     main()

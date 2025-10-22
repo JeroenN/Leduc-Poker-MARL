@@ -71,6 +71,17 @@ def random_player():
 
   return act
 
+def mixed_player(infoset: Infoset, player: int=0):
+    def act(state: State):
+      info = Info.get_info(infoset, state, player)
+      if random.random() < 0.5:
+          action = np.random.choice(info.legal_actions, p=info.policy)
+      else:
+          action = random.choice(info.legal_actions)
+      return action
+    
+    return act
+
 def update_policy(infoset: Infoset):
   for info in infoset.values():
     info.update_policy_from_cum_strategy()
@@ -130,6 +141,21 @@ def vs_random(infoset: Infoset, n_games: int = 500):
     rewards1 = play_games(cfr_player(infoset, 0), random_player(), n_games)
     # Random vs Player 1
     rewards2 = play_games(random_player(), cfr_player(infoset, 1), n_games)
+    
+    # Payoffs for the learner in both seatings
+    payoffs = np.concatenate([rewards1[:,0], rewards2[:,1]])
+    
+    mean = np.mean(payoffs)
+    std = np.std(payoffs, ddof=1)
+    se = std / np.sqrt(len(payoffs))
+    return mean, se
+
+def vs_mixed(infoset: Infoset, n_games: int = 500):
+    """Return mean and standard error of payoff vs (50/50 CFR/random) player."""
+    # Player 0 vs random
+    rewards1 = play_games(cfr_player(infoset, 0), mixed_player(infoset, 1), n_games)
+    # Random vs Player 1
+    rewards2 = play_games(mixed_player(infoset, 0), cfr_player(infoset, 1), n_games)
     
     # Payoffs for the learner in both seatings
     payoffs = np.concatenate([rewards1[:,0], rewards2[:,1]])
@@ -427,7 +453,7 @@ def solve(
       g0 = br0 - J0; g1 = br1 - J1
       gap_mean_hist.append(0.5 * (g0 + g1))
 
-      vs, vs_se = vs_random(infoset, n_games=1000)
+      vs, vs_se = vs_mixed(infoset, n_games=1000)
 
       steps.append(t)
       exploits.append(e)
