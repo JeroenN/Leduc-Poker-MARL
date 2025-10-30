@@ -6,7 +6,7 @@ from open_spiel.python import policy
 from utils import save_comparison_with_ci, save_gap_mean_comparison, save_exploitability_comparison
 import argparse
 
-from cfr2 import game, random_player, solve, vs_random, mixed_player, vs_mixed  # import base CFR components
+from cfr2 import game, random_player, solve, vs_random, mixed_player, vs_mixed
 
 # Counts: maps infoset string -> Counter(action_id -> count)
 Counts = Dict[str, Counter]
@@ -83,7 +83,7 @@ def estimate_policy_from_counts(
     laplace: float = 1.0
 ) -> Dict[str, Dict[int, float]]:
     """
-    Estimate the opponent policy π̂(a|I=key) from counts using
+    Estimate the opponent policy from counts using
     Maximum Likelihood Estimation + Laplace smoothing.
     """
     pi_hat: Dict[str, Dict[int, float]] = {}
@@ -140,7 +140,7 @@ def main():
     some_key = next(iter(pi_hat))
     print("Example infoset:", some_key)
     print("Legal actions:", legal_by_key[some_key])
-    print("Estimated π̂:", pi_hat[some_key])
+    print("Estimated policy:", pi_hat[some_key])
 
     eval_opp_tab = dict_policy_to_tabular(game, pi_hat)
 

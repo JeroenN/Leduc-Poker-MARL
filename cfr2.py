@@ -295,20 +295,18 @@ def cfr_vs_fixed_opponent(
 
     cur = state.current_player()
 
-    # ---------------------------
     # Opponent node (fixed policy)
-    # ---------------------------
     if cur != learner:
         key = state.information_state_string(cur)  # opponent infoset key
         acts = state.legal_actions()
 
-        # Fetch π̂_opp(a|key); fallback to uniform over legal acts if missing
+        # fallback to uniform over legal acts if missing
         probs = []
         table = pi_opp.get(key, None)
         if table is None:
             probs = np.ones(len(acts)) / len(acts)
         else:
-            # collect in action order; if an action missing in dict, treat as 0 then renormalize
+            # collect in action order
             vec = np.array([table.get(a, 0.0) for a in acts], dtype=float)
             s = vec.sum()
             if s <= 0:
@@ -327,9 +325,7 @@ def cfr_vs_fixed_opponent(
                 node_v += p_a * cfr_vs_fixed_opponent(infosets, child, learner, t, pi_opp, p0, p1 * p_a, pc)
         return float(node_v)
 
-    # ---------------------------
     # Learner node (regret-matching)
-    # ---------------------------
     info = Info.get_info(infosets, state, cur)  # this creates/stores only learner’s infosets
     acts = info.legal_actions
 
@@ -340,7 +336,6 @@ def cfr_vs_fixed_opponent(
     else:
         info.strategy = np.ones(info.n) / info.n
 
-    # recurse on actions
     util_a = np.zeros(info.n, dtype=float)
     node_v = 0.0
     for k, a in enumerate(acts):
@@ -355,11 +350,11 @@ def cfr_vs_fixed_opponent(
     # regret update (only for learner)
     opp_reach = p1 if learner == 0 else p0
     info.cum_regret += pc * opp_reach * (util_a - node_v)
-    info.cum_regret = np.maximum(info.cum_regret, 0.0)  # CFR+ clamp (optional)
+    info.cum_regret = np.maximum(info.cum_regret, 0.0)
 
-    # average strategy update for learner (you can use linear weighting t if desired)
+    # average strategy update for learner
     owner_reach = p0 if learner == 0 else p1
-    info.cum_strategy += owner_reach * info.strategy  # or (t+1)*owner_reach for CFR+
+    info.cum_strategy += owner_reach * info.strategy
 
     return float(node_v)
 
