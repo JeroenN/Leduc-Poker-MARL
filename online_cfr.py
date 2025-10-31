@@ -341,7 +341,7 @@ def _grid_search_worker(params):
 
 
 if __name__ == "__main__":
-    random_grid_search(n_samples=3, n_cpus=3)
+    random_grid_search(n_samples=10_000, n_cpus=16)
 
 
 

@@ -8,5 +8,5 @@
 #SBATCH --error=logs/error.%j.log   # Error log
 module purge
 module load meson-python/0.18.0-GCCcore-14.2.0
-source "/home3/s3799042/lc0_venv2/bin/activate"
-srun python3 main.py
+source ".venv/bin/activate"
+srun python online_cfr.py
