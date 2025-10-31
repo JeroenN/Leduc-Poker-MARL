@@ -292,9 +292,10 @@ def random_logspace(low, high, num_samples):
 
 
 def _init_result_file():
-    with open(RESULTS_PATH, "w", newline="", encoding="utf-8") as f:
-        writer = csv.writer(f)
-        writer.writerow(["steps_per_cycle", "laplace", "error", "exception"])
+    if not RESULTS_PATH.exists():
+        with open(RESULTS_PATH, "w", newline="", encoding="utf-8") as f:
+            writer = csv.writer(f)
+            writer.writerow(["steps_per_cycle", "laplace", "error", "exception"])
 
 
 def random_grid_search(n_samples: int, n_cpus: int):
