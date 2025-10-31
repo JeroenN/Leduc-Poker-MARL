@@ -1,6 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
+
 def save_comparison_with_ci(
     x1, y1, yerr1, label1,
     x2, y2, yerr2, label2,

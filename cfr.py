@@ -9,7 +9,10 @@ from open_spiel.python import policy
 import pyspiel
 
 game = pyspiel.load_game("leduc_poker")
+Strategy = dict[str, dict[int, float]]
 
+
+# ------------------Setup infosets and game stuff---------------------
 class Info:
 
   def __init__(self, legal_actions: list[int]):
@@ -42,7 +45,6 @@ class Info:
   @classmethod
   def get_info(cls, infoset: "Infoset", state: State, player: int) -> "Info":
 
-    observation = state.observation_tensor(player)
     legal_actions = state.legal_actions()
 
     key = (state.information_state_string(player))
@@ -54,6 +56,31 @@ class Info:
     assert info.legal_actions == legal_actions
 
     return info
+  
+  def equal_nodes_policies(self, other: "Info") -> bool:
+     
+    eq_la = np.array_equal(self.legal_actions, other.legal_actions)
+    
+    if not eq_la:
+       return False
+    
+    return np.allclose(self.policy, other.policy, atol=1e-8)
+  
+  @staticmethod
+  def compare_infosets(i1: "Infoset", i2: "Infoset") -> bool:
+    
+    ke = set(i1.keys()) == set(i2.keys())
+    if not ke:
+       return False
+    
+    for key in i1.keys():
+      eq = i1[key].equal_nodes_policies(i2[key])
+
+      if not eq:
+         return False
+      
+    return True
+    
 
 Infoset = dict[str, Info]
 
@@ -63,24 +90,7 @@ def apply_action(state: State, action: int) -> State:
   return next_state
 
 
-def random_player():
-
-  def act(state: State):
-    legal_actions = state.legal_actions()
-    return random.choice(legal_actions)
-
-  return act
-
-def mixed_player(infoset: Infoset, player: int=0):
-    def act(state: State):
-      info = Info.get_info(infoset, state, player)
-      if random.random() < 0.5:
-          action = np.random.choice(info.legal_actions, p=info.policy)
-      else:
-          action = random.choice(info.legal_actions)
-      return action
-    
-    return act
+# ---------------------------- CFR code --------------------------------
 
 def update_policy(infoset: Infoset):
   for info in infoset.values():
@@ -89,124 +99,19 @@ def update_policy(infoset: Infoset):
 def update_strategy(infoset: Infoset):
   for info in infoset.values():
     info.update_strategy_from_cum_regret()
-
-
-def cfr_player(infoset: Infoset, player: int=0):
-
-  def act(state: State):
-    info = Info.get_info(infoset, state, player)
-    action = np.random.choice(info.legal_actions, p=info.policy)
-    return action
-
-  return act
-
-
-def play_match(p0, p1) -> np.ndarray:
-
-  opponent_obs: list[tuple[str, int]] = []
-
-  state = game.new_initial_state()
-  while not state.is_terminal():
-
-    if state.is_chance_node():
-      outcomes_with_probs = state.chance_outcomes()
-      action_list, prob_list = zip(*outcomes_with_probs)
-      action = np.random.choice(action_list, p=prob_list)
-      state.apply_action(action)
-    else:
-
-      if state.current_player() == 0:
-        action = p0(state)
-      else:
-        action = p1(state)
-        key = state.information_state_string(1)  # infoset with opponent card
-        opponent_obs.append((key, action))
-
-      state.apply_action(action)
-
-  return np.array(state.rewards())
-
-
-def play_games(p0, p1, n_games: int = 50):
-    """Play n_games and return  all rewards."""
-    all_rewards = np.zeros((n_games, 2))
-    for i in range(n_games):
-        all_rewards[i] = play_match(p0, p1)
-    return all_rewards
-
-
-def vs_random(infoset: Infoset, n_games: int = 500):
-    """Return mean and standard error of payoff vs random."""
-    # Player 0 vs random
-    rewards1 = play_games(cfr_player(infoset, 0), random_player(), n_games)
-    # Random vs Player 1
-    rewards2 = play_games(random_player(), cfr_player(infoset, 1), n_games)
-    
-    # Payoffs for the learner in both seatings
-    payoffs = np.concatenate([rewards1[:,0], rewards2[:,1]])
-    
-    mean = np.mean(payoffs)
-    std = np.std(payoffs, ddof=1)
-    se = std / np.sqrt(len(payoffs))
-    return mean, se
-
-def vs_mixed(infoset: Infoset, n_games: int = 500):
-    """Return mean and standard error of payoff vs (50/50 CFR/random) player."""
-    # Player 0 vs random
-    rewards1 = play_games(cfr_player(infoset, 0), mixed_player(infoset, 1), n_games)
-    # Random vs Player 1
-    rewards2 = play_games(mixed_player(infoset, 0), cfr_player(infoset, 1), n_games)
-    
-    # Payoffs for the learner in both seatings
-    payoffs = np.concatenate([rewards1[:,0], rewards2[:,1]])
-    
-    mean = np.mean(payoffs)
-    std = np.std(payoffs, ddof=1)
-    se = std / np.sqrt(len(payoffs))
-    return mean, se
-
-
-# my, op, env
-STRUE = True
-weighting_specs = {
-    "op_r_my_s": {
-        "r": [False, STRUE, False],
-        "s": [STRUE, False, False],
-    },
-    "op_env_r_my_s": {
-        "r": [False, STRUE, STRUE],
-        "s": [STRUE, False, False],
-    },
-    "my_r_op_s": {
-        "r": [STRUE, False, False],
-        "s": [False, STRUE, False],
-    },
-    "both_my": {
-        "r": [STRUE, False, False],
-        "s": [STRUE, False, False],
-    },
-    "both_my_env": {
-        "r": [STRUE, False, STRUE],
-        "s": [STRUE, False, STRUE],
-    },
-    "both_op_env": {
-        "r": [False, STRUE, STRUE],
-        "s": [False, STRUE, STRUE],
-    },
-    "both_op":  {
-        "r": [False, STRUE, False],
-        "s": [False, STRUE, False],
-    },
-    "full": {
-        "r": [STRUE, STRUE, STRUE],
-        "s": [STRUE, STRUE, STRUE],
-    }
-}
-
-weighting: str | None = None
     
 
-def cfr(infoset: Infoset, state: State, player_i: int, t: int, p0_p: float = 1.0, p1_p: float = 1.0, env_p: float = 1.0):
+def cfr(
+    infoset: Infoset,
+    state: State,
+    player_i: int,
+    t: int,
+    p0_p: float = 1.0,
+    p1_p: float = 1.0,
+    env_p: float = 1.0,
+    p0_fixed_strategy: Strategy | None = None,
+    p1_fixed_strategy: Strategy | None = None,
+  ):
 
   if state.is_terminal():
     return state.rewards()[player_i]
@@ -216,31 +121,46 @@ def cfr(infoset: Infoset, state: State, player_i: int, t: int, p0_p: float = 1.0
 
     for action, prob in state.chance_outcomes():
       next_state = apply_action(state, action)
-      expected_reward += prob * cfr(infoset, next_state, player_i, t, p0_p, p1_p, env_p * prob)
+      expected_reward += prob * cfr(infoset, next_state, player_i, t, p0_p, p1_p, env_p * prob, p0_fixed_strategy, p1_fixed_strategy)
 
     return expected_reward
 
   # Player node calc regret
   current_player = state.current_player()
+  current_fixed_strategy = (p0_fixed_strategy) if current_player == 0 else (p1_fixed_strategy)
+  current_fixed = current_fixed_strategy is not None
+  legal_actions = state.legal_actions()
+
   info = Info.get_info(infoset, state, current_player)
+  assert len(legal_actions) == info.n, "Mismatch in legal action size"
+
+  if current_fixed:
+    
+    key = state.information_state_string(current_player)
+    fixed_node_strategy = current_fixed_strategy.get(key, None)
+
+    if fixed_node_strategy is None:
+      total_legal = len(legal_actions)
+      fixed_node_strategy = {action_int: 1.0 / total_legal for action_int in legal_actions}
+
 
   expected_values_given_actions = np.zeros(info.n)
   expected_value_from_this_node = 0
-
-  legal_actions = state.legal_actions()
-
-  assert len(legal_actions) == info.n, "Mismatch in legal action size"
-  assert sorted(legal_actions) == legal_actions, "Not sorted, it will break"
-
-
   for i_action, action in enumerate(legal_actions):
-    p_action = info.strategy[i_action]
+
+    if current_fixed:
+      # fixed_node_strategy is dict
+      p_action = fixed_node_strategy[action]
+    else:
+      # info.strategy is array 
+      p_action = info.strategy[i_action]
+
     next_state = apply_action(state, action)
 
     if current_player == 0:
-      r = cfr(infoset, next_state, player_i, t, p0_p * p_action, p1_p, env_p)
+      r = cfr(infoset, next_state, player_i, t, p0_p * p_action, p1_p, env_p, p0_fixed_strategy, p1_fixed_strategy)
     elif current_player == 1:
-      r = cfr(infoset, next_state, player_i, t, p0_p, p1_p * p_action, env_p)
+      r = cfr(infoset, next_state, player_i, t, p0_p, p1_p * p_action, env_p, p0_fixed_strategy, p1_fixed_strategy)
     else:
       assert False, f"Curr player = {current_player}"
 
@@ -251,11 +171,8 @@ def cfr(infoset: Infoset, state: State, player_i: int, t: int, p0_p: float = 1.0
   p_i = p0_p if player_i == 0 else p1_p
   p_minus_i = p1_p if player_i == 0 else p0_p
 
-  if current_player == 0:
-    info.cum_strategy += (t + 1) * p0_p * info.strategy   # CFR+ linear weighting
-  else:  # current_player == 1
-    info.cum_strategy += (t + 1) * p1_p * info.strategy
-
+  # This was working, come back here if broken, don't forget not to update for fixed player
+  # info.cum_strategy += (t + 1) * p_i * info.strategy
 
   if current_player == player_i:
 
@@ -266,7 +183,8 @@ def cfr(infoset: Infoset, state: State, player_i: int, t: int, p0_p: float = 1.0
     # Original placement
     # info.cum_strategy +=  p_i * info.strategy
     # CFR+
-    # info.cum_strategy += t * p_i * info.strategy
+    # Will this work? 
+    info.cum_strategy += (t + 1) * p_i * info.strategy
     info.cum_regret = np.maximum(info.cum_regret, 0.0)
 
   return expected_value_from_this_node
@@ -276,7 +194,7 @@ def cfr_vs_fixed_opponent(
     state: State,
     learner: int,           # e.g., 0
     t: int,                 # iteration index (for averaging weights if you like)
-    pi_opp: dict[str, dict[int, float]],  # learned opponent policy: key -> {action: prob}
+    pi_opp: Strategy,  # learned opponent policy: key -> {action: prob}
     p0: float = 1.0,        # reach prob for P0 up to this node
     p1: float = 1.0,        # reach prob for P1 up to this node
     pc: float = 1.0         # reach prob for chance up to this node
@@ -363,6 +281,119 @@ def cfr_vs_fixed_opponent(
 
     return float(node_v)
 
+# ---------------------------- Evaluation code --------------------------------
+
+def random_player():
+
+  def act(state: State):
+    legal_actions = state.legal_actions()
+    return random.choice(legal_actions)
+
+  return act
+
+def mixed_player(infoset: Infoset, player: int=0):
+    def act(state: State):
+      info = Info.get_info(infoset, state, player)
+      if random.random() < 0.5:
+          action = np.random.choice(info.legal_actions, p=info.policy)
+      else:
+          action = random.choice(info.legal_actions)
+      return action
+    
+    return act
+
+def cfr_player(infoset: Infoset, player: int=0):
+
+  def act(state: State):
+    info = Info.get_info(infoset, state, player)
+    action = np.random.choice(info.legal_actions, p=info.policy)
+    return action
+
+  return act
+
+def strategy_player(strategy: Strategy, player: int=0):
+   
+  def act(state: State):
+     
+    key = state.information_state_string(player)
+    node_strategy = strategy.get(key, None)
+
+    if node_strategy is None:
+      legal_actions = state.legal_actions()
+      total_legal = len(legal_actions)
+      node_strategy = {action_int: 1.0 / total_legal for action_int in legal_actions}
+    
+    actions = list(node_strategy.keys())
+    p = list(node_strategy.values())
+    
+    return np.random.choice(actions, p=p)
+  
+  return act
+
+def play_match(p0, p1) -> np.ndarray:
+
+  opponent_obs: list[tuple[str, int]] = []
+
+  state = game.new_initial_state()
+  while not state.is_terminal():
+
+    if state.is_chance_node():
+      outcomes_with_probs = state.chance_outcomes()
+      action_list, prob_list = zip(*outcomes_with_probs)
+      action = np.random.choice(action_list, p=prob_list)
+      state.apply_action(action)
+    else:
+
+      if state.current_player() == 0:
+        action = p0(state)
+      else:
+        action = p1(state)
+        key = state.information_state_string(1)  # infoset with opponent card
+        opponent_obs.append((key, action))
+
+      state.apply_action(action)
+
+  return np.array(state.rewards())
+
+
+def play_games(p0, p1, n_games: int = 50):
+    """Play n_games and return  all rewards."""
+    all_rewards = np.zeros((n_games, 2))
+    for i in range(n_games):
+        all_rewards[i] = play_match(p0, p1)
+    return all_rewards
+
+
+def vs_random(infoset: Infoset, n_games: int = 500):
+    """Return mean and standard error of payoff vs random."""
+    # Player 0 vs random
+    rewards1 = play_games(cfr_player(infoset, 0), random_player(), n_games)
+    # Random vs Player 1
+    rewards2 = play_games(random_player(), cfr_player(infoset, 1), n_games)
+    
+    # Payoffs for the learner in both seatings
+    payoffs = np.concatenate([rewards1[:,0], rewards2[:,1]])
+    
+    mean = np.mean(payoffs)
+    std = np.std(payoffs, ddof=1)
+    se = std / np.sqrt(len(payoffs))
+    return mean, se
+
+def vs_mixed(infoset: Infoset, n_games: int = 500):
+    """Return mean and standard error of payoff vs (50/50 CFR/random) player."""
+    # Player 0 vs random
+    rewards1 = play_games(cfr_player(infoset, 0), mixed_player(infoset, 1), n_games)
+    # Random vs Player 1
+    rewards2 = play_games(mixed_player(infoset, 0), cfr_player(infoset, 1), n_games)
+    
+    # Payoffs for the learner in both seatings
+    payoffs = np.concatenate([rewards1[:,0], rewards2[:,1]])
+    
+    mean = np.mean(payoffs)
+    std = np.std(payoffs, ddof=1)
+    se = std / np.sqrt(len(payoffs))
+    return mean, se
+
 
 def create_tabular_policy(infosets):
   tabular_policy= policy.TabularPolicy(game)
@@ -401,6 +432,8 @@ def value_vs_fixed_policy(game, learner_tab, opp_tab, learner_id, n_games=20000)
     return float(payoffs.mean()), float(payoffs.std(ddof=1))
 
 
+
+# ---------------------------- Train code --------------------------------
 def solve(
       t_max=200,
       mode: str = "selfplay",   # "selfplay" or "vs_fixed"
@@ -417,7 +450,7 @@ def solve(
 
   infoset: Infoset = dict()
 
-  for t in tqdm.tqdm(list(range(t_max))):
+  for t in tqdm.tqdm(range(t_max)):
 
     # Update strategies from cumulative regret for each infonode
     update_strategy(infoset)

@@ -6,7 +6,7 @@ from open_spiel.python import policy
 from utils import save_comparison_with_ci, save_gap_mean_comparison, save_exploitability_comparison
 import argparse
 
-from cfr2 import game, random_player, solve, vs_random, mixed_player, vs_mixed  # import base CFR components
+from cfr import game, random_player, solve, vs_random, mixed_player, vs_mixed  # import base CFR components
 
 # Counts: maps infoset string -> Counter(action_id -> count)
 Counts = Dict[str, Counter]
