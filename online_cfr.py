@@ -340,27 +340,32 @@ def _grid_search_worker(params):
         _write_result_safe(row)
 
 
-if __name__ == "__main__":
-    random_grid_search(n_samples=10_000, n_cpus=16)
-
-
-
 # if __name__ == "__main__":
-#     from matplotlib import pyplot as plt
+#     random_grid_search(n_samples=10_000, n_cpus=16)
 
-#     strategy_mixer_signal, gaps_to_best_response = online_solve(
-#         steps_per_cycle=1000,
-#         laplace=1.0,
-#         learner=0,
-#     )
 
-#     fig, ax1 = plt.subplots()
-#     ax2 = ax1.twinx()
 
-#     l1, = ax1.plot(strategy_mixer_signal, color='tab:blue', label='strategy_mixer')
-#     l2, = ax2.plot(gaps_to_best_response, color='tab:orange', label='gap_to_best_response')
+if __name__ == "__main__":
+    
+    
+    from matplotlib import pyplot as plt
 
-#     ax1.legend(handles=[l1, l2], loc='upper right')
-#     fig.savefig("./figures/online_cfr.png")
-        
+    for steps_per_cycle in [100, 4_000, 8_000]:
+        strategy_mixer_signal, gaps_to_best_response = online_solve(
+            steps_per_cycle=steps_per_cycle,
+            laplace=20.0,
+            learner=0,
+        )
+
+        np.save(f"./gap_{steps_per_cycle}.npy", np.array(gaps_to_best_response))
+
+        # fig, ax1 = plt.subplots()
+        # ax2 = ax1.twinx()
+
+        # l1, = ax1.plot(strategy_mixer_signal, color='tab:blue', label='strategy_mixer')
+        # l2, = ax2.plot(gaps_to_best_response, color='tab:orange', label='gap_to_best_response')
+
+        # ax1.legend(handles=[l1, l2], loc='upper right')
+        # fig.savefig("./figures/online_cfr.png")
+            
     
