@@ -220,7 +220,7 @@ def online_solve(
         p1_fixed_strategy = None
 
     gaps_to_best_response = []
-    for strategy_mixer in tqdm.tqdm(strategy_mixer_signal, disable=True):
+    for strategy_mixer in tqdm.tqdm(strategy_mixer_signal, disable=False):
 
         # Update internal CFR strategy
         update_strategy(infoset)
@@ -276,68 +276,68 @@ def online_solve(
     return strategy_mixer_signal, gaps_to_best_response, error
 
 
-import multiprocessing as mp
-import csv
-import random
-import time
-from pathlib import Path
-import numpy as np
+# import multiprocessing as mp
+# import csv
+# import random
+# import time
+# from pathlib import Path
+# import numpy as np
 
-RESULTS_PATH = Path(__file__).parent / "grid_results.csv"
-
-
-def random_logspace(low, high, num_samples):
-    log_low, log_high = np.log10(low), np.log10(high)
-    return np.power(10, np.random.uniform(log_low, log_high, num_samples))
+# RESULTS_PATH = Path(__file__).parent / "grid_results.csv"
 
 
-def _init_result_file():
-    if not RESULTS_PATH.exists():
-        with open(RESULTS_PATH, "w", newline="", encoding="utf-8") as f:
-            writer = csv.writer(f)
-            writer.writerow(["steps_per_cycle", "laplace", "error", "exception"])
+# def random_logspace(low, high, num_samples):
+#     log_low, log_high = np.log10(low), np.log10(high)
+#     return np.power(10, np.random.uniform(log_low, log_high, num_samples))
 
 
-def random_grid_search(n_samples: int, n_cpus: int):
-
-    n_cpus = n_cpus or mp.cpu_count()
-    _init_result_file()
-
-    steps_per_cycle_samples = random_logspace(100, 100_000, n_samples).astype(int)
-    #steps_per_cycle_samples = random_logspace(2, 10, n_samples).astype(int)
-    laplace_samples = random_logspace(0.5, 50, n_samples)
-
-    param_grid = list(zip(steps_per_cycle_samples, laplace_samples))
-
-    with mp.Pool(processes=n_cpus, maxtasksperchild=1) as pool:
-        pool.map(_grid_search_worker, param_grid)
+# def _init_result_file():
+#     if not RESULTS_PATH.exists():
+#         with open(RESULTS_PATH, "w", newline="", encoding="utf-8") as f:
+#             writer = csv.writer(f)
+#             writer.writerow(["steps_per_cycle", "laplace", "error", "exception"])
 
 
-def _write_result_safe(row: list):
-    for _ in range(10):
-        try:
-            with open(RESULTS_PATH, "a", newline="", encoding="utf-8") as f:
-                writer = csv.writer(f)
-                writer.writerow(row)
-            return
-        except OSError:
-            time.sleep(random.uniform(0.05, 0.2))
-    print("Warning: Failed to write result after multiple retries:", row)
+# def random_grid_search(n_samples: int, n_cpus: int):
+
+#     n_cpus = n_cpus or mp.cpu_count()
+#     _init_result_file()
+
+#     steps_per_cycle_samples = random_logspace(100, 100_000, n_samples).astype(int)
+#     #steps_per_cycle_samples = random_logspace(2, 10, n_samples).astype(int)
+#     laplace_samples = random_logspace(0.5, 50, n_samples)
+
+#     param_grid = list(zip(steps_per_cycle_samples, laplace_samples))
+
+#     with mp.Pool(processes=n_cpus, maxtasksperchild=1) as pool:
+#         pool.map(_grid_search_worker, param_grid)
 
 
-def _grid_search_worker(params):
-    steps_per_cycle, laplace = params
-    try:
-        _, _, error = online_solve(
-            steps_per_cycle=int(steps_per_cycle),
-            laplace=float(laplace),
-            learner=0,
-        )
-        row = [int(steps_per_cycle), float(laplace), float(error), ""]
-        _write_result_safe(row)
-    except Exception as e:
-        row = [int(steps_per_cycle), float(laplace), "", str(e)]
-        _write_result_safe(row)
+# def _write_result_safe(row: list):
+#     for _ in range(10):
+#         try:
+#             with open(RESULTS_PATH, "a", newline="", encoding="utf-8") as f:
+#                 writer = csv.writer(f)
+#                 writer.writerow(row)
+#             return
+#         except OSError:
+#             time.sleep(random.uniform(0.05, 0.2))
+#     print("Warning: Failed to write result after multiple retries:", row)
+
+
+# def _grid_search_worker(params):
+#     steps_per_cycle, laplace = params
+#     try:
+#         _, _, error = online_solve(
+#             steps_per_cycle=int(steps_per_cycle),
+#             laplace=float(laplace),
+#             learner=0,
+#         )
+#         row = [int(steps_per_cycle), float(laplace), float(error), ""]
+#         _write_result_safe(row)
+#     except Exception as e:
+#         row = [int(steps_per_cycle), float(laplace), "", str(e)]
+#         _write_result_safe(row)
 
 
 # if __name__ == "__main__":
@@ -350,8 +350,8 @@ if __name__ == "__main__":
     
     from matplotlib import pyplot as plt
 
-    for steps_per_cycle in [100, 4_000, 8_000]:
-        strategy_mixer_signal, gaps_to_best_response = online_solve(
+    for steps_per_cycle in [8_000]:
+        strategy_mixer_signal, gaps_to_best_response, error = online_solve(
             steps_per_cycle=steps_per_cycle,
             laplace=20.0,
             learner=0,

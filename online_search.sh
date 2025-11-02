@@ -2,7 +2,7 @@
 #SBATCH --job-name=cfr_online 
 #SBATCH --partition=regular
 #SBATCH --cpus-per-task=1
-#SBATCH --time=4:00:00
+#SBATCH --time=6:00:00
 #SBATCH --mem=8G 
 #SBATCH --output=logs/output.%j.log  # Output log
 #SBATCH --error=logs/error.%j.log   # Error log
