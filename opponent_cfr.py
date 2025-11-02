@@ -9,7 +9,7 @@ from utils import (
 )
 import argparse
 
-from cfr2 import game, random_player, solve, vs_random, mixed_player, vs_mixed
+from cfr import game, random_player, solve, vs_random, mixed_player, vs_mixed
 
 # Maps infoset key -> counts of actions taken in that infoset
 Counts = dict[str, Counter[int]]
