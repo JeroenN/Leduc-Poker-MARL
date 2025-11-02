@@ -1,4 +1,5 @@
 import random
+from typing import Literal
 import pyspiel
 from pyspiel import State
 import numpy as np
@@ -199,6 +200,8 @@ def cfr_vs_fixed_opponent(
     p1: float = 1.0,        # reach prob for P1 up to this node
     pc: float = 1.0         # reach prob for chance up to this node
 ):
+    """Obsolete version used for backward compatibility, look in the cfr function instead"""
+
     # terminal
     if state.is_terminal():
         return state.rewards()[learner]
@@ -213,20 +216,15 @@ def cfr_vs_fixed_opponent(
 
     cur = state.current_player()
 
-    # ---------------------------
-    # Opponent node (fixed policy)
-    # ---------------------------
     if cur != learner:
-        key = state.information_state_string(cur)  # opponent infoset key
+        key = state.information_state_string(cur)
         acts = state.legal_actions()
 
-        # Fetch π̂_opp(a|key); fallback to uniform over legal acts if missing
         probs = []
         table = pi_opp.get(key, None)
         if table is None:
             probs = np.ones(len(acts)) / len(acts)
         else:
-            # collect in action order; if an action missing in dict, treat as 0 then renormalize
             vec = np.array([table.get(a, 0.0) for a in acts], dtype=float)
             s = vec.sum()
             if s <= 0:
@@ -235,7 +233,6 @@ def cfr_vs_fixed_opponent(
                 vec = vec / s
             probs = vec
 
-        # Expected value under fixed opponent strategy
         node_v = 0.0
         for p_a, a in zip(probs, acts):
             child = state.child(a)
@@ -245,20 +242,16 @@ def cfr_vs_fixed_opponent(
                 node_v += p_a * cfr_vs_fixed_opponent(infosets, child, learner, t, pi_opp, p0, p1 * p_a, pc)
         return float(node_v)
 
-    # ---------------------------
-    # Learner node (regret-matching)
-    # ---------------------------
-    info = Info.get_info(infosets, state, cur)  # this creates/stores only learner’s infosets
+
+    info = Info.get_info(infosets, state, cur)
     acts = info.legal_actions
 
-    # current strategy from positive regrets (CFR/CFR+)
     R_plus = np.maximum(info.cum_regret, 0.0)
     if R_plus.sum() > 0:
         info.strategy = R_plus / R_plus.sum()
     else:
         info.strategy = np.ones(info.n) / info.n
 
-    # recurse on actions
     util_a = np.zeros(info.n, dtype=float)
     node_v = 0.0
     for k, a in enumerate(acts):
@@ -270,14 +263,13 @@ def cfr_vs_fixed_opponent(
             util_a[k] = cfr_vs_fixed_opponent(infosets, child, learner, t, pi_opp, p0, p1 * p_a, pc)
         node_v += p_a * util_a[k]
 
-    # regret update (only for learner)
+
     opp_reach = p1 if learner == 0 else p0
     info.cum_regret += pc * opp_reach * (util_a - node_v)
-    info.cum_regret = np.maximum(info.cum_regret, 0.0)  # CFR+ clamp (optional)
+    info.cum_regret = np.maximum(info.cum_regret, 0.0)
 
-    # average strategy update for learner (you can use linear weighting t if desired)
     owner_reach = p0 if learner == 0 else p1
-    info.cum_strategy += owner_reach * info.strategy  # or (t+1)*owner_reach for CFR+
+    info.cum_strategy += owner_reach * info.strategy
 
     return float(node_v)
 
@@ -435,8 +427,8 @@ def value_vs_fixed_policy(game, learner_tab, opp_tab, learner_id, n_games=20000)
 
 # ---------------------------- Train code --------------------------------
 def solve(
-      t_max=200,
-      mode: str = "selfplay",   # "selfplay" or "vs_fixed"
+      t_max=500,
+      mode: Literal["selfplay", "vs_fixed"] = "selfplay",   # "selfplay" or "vs_fixed"
       pi_opp: dict[str, dict[int, float]] = None,
       eval_opp_tab=None,
       n_eval_mc=5000

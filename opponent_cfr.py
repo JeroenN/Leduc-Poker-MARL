@@ -6,7 +6,7 @@ from open_spiel.python import policy
 from utils import save_comparison_with_ci, save_gap_mean_comparison, save_exploitability_comparison
 import argparse
 
-from cfr2 import game, random_player, solve, vs_random, mixed_player, vs_mixed  # import base CFR components
+from cfr import game, random_player, solve, vs_random, mixed_player, vs_mixed  # import base CFR components
 
 # Counts: maps infoset string -> Counter(action_id -> count)
 Counts = Dict[str, Counter]
@@ -46,7 +46,6 @@ def collect_opponent_counts(n_games: int, infoset = None, opponent_type: str = "
 
     if infoset is None: infoset = {}
 
-    # --- Case 1: Opponent sits at seat 1 ---
     p_you_0 = random_player()
     if opponent_type == "mixed":
         p_opp_1 = mixed_player(infoset, player=1)
@@ -60,7 +59,6 @@ def collect_opponent_counts(n_games: int, infoset = None, opponent_type: str = "
             legal_by_key.setdefault(key, la)
             assert legal_by_key[key] == la
 
-    # --- Case 2: Opponent sits at seat 0 ---
     if opponent_type == "mixed":
         p_opp_0 = mixed_player(infoset, player=0)
     else:
@@ -133,10 +131,8 @@ def main():
         avg_payoff_rand = vs_random(infoset, n_games=50000)
     print(f"Average payoff vs {opponent_type} after CFR training: {avg_payoff_rand}")
 
-    # Estimate opponent policy π̂ from aggregated counts
     pi_hat = estimate_policy_from_counts(counts, legal_by_key)
 
-    # Example: print one estimated policy
     some_key = next(iter(pi_hat))
     print("Example infoset:", some_key)
     print("Legal actions:", legal_by_key[some_key])
