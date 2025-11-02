@@ -5,3 +5,28 @@ This project implements Opponent Counterfactual Regret (OCFR), an extension of C
 Using Leduc Hold’em in OpenSpiel, we compare OCFR and CFR on exploitability, best-response gap, and payoff.
 We also test an online adaptation experiment, where OCFR updates its opponent model as the opponent’s strategy changes.
 OCFR yields higher payoffs against fixed, suboptimal opponents but struggles when the opponent adapts rapidly.
+
+## Instalation
+
+In your venv
+```
+pip install -r requirements.txt
+```
+
+## Running
+
+Classical CFR (Nash Equilibrium)
+```
+python cfr.py
+```
+
+Opponent CFR (Best Response)
+```
+python opponent_cfr.py
+```
+
+Online OCFR experiments
+```
+python online_cfr.py
+```
+
